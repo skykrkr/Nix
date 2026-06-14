@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Nix",
+  "short_name": "Nix",
+  "version": "1.0.0",
+  "description": "极简个性化新标签页 — 动态背景 + 可拖拽搜索栏 + 时间组件",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "permissions": [],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

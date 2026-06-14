@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新标签页 · 极简</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    user-select: none;
+    background: #0a0a0f;
+  }
+
+  /* ── 背景 ── */
+  #bg-layer {
+    position: fixed; inset: 0;
+    z-index: 0;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e, #302b63, #0f0c29);
+    background-size: 400% 400%;
+    animation: gradientFlow 12s ease infinite;
+    transition: background-image 0.5s ease;
+  }
+  @keyframes gradientFlow {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  #bg-layer.uploaded {
+    animation: none;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* ── 搜索栏 ── */
+  #search-bar {
+    position: fixed;
+    z-index: 5;
+    width: 520px; max-width: 90vw;
+    background: rgba(255,255,255,0.10);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 50px;
+    padding: 6px 24px;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+    cursor: grab;
+    transition: opacity 0.35s ease, box-shadow 0.35s ease;
+  }
+  #search-bar:active { cursor: grabbing; }
+
+  #search-input {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none; outline: none;
+    color: rgba(255,255,255,0.9);
+    font-size: 16px;
+    padding: 10px 0;
+    font-family: inherit;
+    caret-color: rgba(255,255,255,0.6);
+  }
+
+  /* ── 齿轮 ── */
+  #gear-btn {
+    position: fixed;
+    top: 24px; right: 24px;
+    z-index: 20;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.6);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.15;
+    transition: opacity 0.35s ease, background 0.3s ease;
+  }
+  #gear-btn:hover { opacity: 1; background: rgba(255,255,255,0.12); }
+
+  /* ── 右侧面板 ── */
+  #settings-panel {
+    position: fixed;
+    top: 0; right: 0;
+    z-index: 15;
+    width: 300px; height: 100vh;
+    background: rgba(18, 16, 36, 0.80);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-left: 1px solid rgba(255,255,255,0.08);
+    padding: 72px 24px 24px;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  #settings-panel.open { transform: translateX(0); }
+
+  #panel-overlay {
+    position: fixed; inset: 0;
+    z-index: 14;
+    background: transparent;
+    display: none;
+  }
+  #panel-overlay.show { display: block; }
+
+  /* ── 面板样式 ── */
+  .panel-title {
+    color: rgba(255,255,255,0.35);
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .section-label {
+    color: rgba(255,255,255,0.45);
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 1px;
+    margin: 14px 0 6px 0;
+  }
+
+  .setting-row {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 8px 0;
+  }
+
+  .setting-row .row-header {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .setting-row .row-header label {
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+  }
+  .setting-row .row-header .val {
+    color: rgba(255,255,255,0.35);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    min-width: 36px; text-align: right;
+  }
+
+  .setting-row input[type="range"] {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none; appearance: none;
+    background: rgba(255,255,255,0.10);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    margin: 4px 0;
+  }
+  .setting-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .setting-row input[type="range"]::-webkit-slider-thumb:hover {
+    background: rgba(255,255,255,0.5);
+  }
+  .setting-row input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    cursor: pointer; border: none;
+  }
+
+  select {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 10px 14px; border-radius: 10px;
+    font-size: 14px; cursor: pointer; font-family: inherit;
+    outline: none;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='rgba(255,255,255,0.35)' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+  select option { background: #1a1a2e; color: #eee; }
+
+  .btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.45);
+    padding: 9px 14px; border-radius: 10px;
+    font-size: 13px; cursor: pointer; font-family: inherit;
+    transition: background 0.2s, color 0.2s;
+    text-align: center;
+  }
+  .btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
+  .btn input[type="file"] { display: none; }
+
+  .sep {
+    height: 1px;
+    background: rgba(255,255,255,0.05);
+    margin: 4px 0;
+  }
+
+  .btn-group {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 6px 0;
+  }
+
+  /* ── 时钟 ── */
+  #clock {
+    position: fixed;
+    top: 28px; right: 76px;
+    z-index: 3;
+    color: rgba(255,255,255,0.12);
+    font-size: 13px; font-weight: 300;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+  }
+
+  /* ── 提示 ── */
+  #hint {
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+    z-index: 2;
+    color: rgba(255,255,255,0.08);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+  }
+  #hint.show { opacity: 1; }
+
+  @media (max-width: 600px) {
+    #search-bar { width: 92vw; padding: 5px 18px; }
+    #search-input { font-size: 15px; padding: 8px 0; }
+    #settings-panel { width: 100vw; }
+    #clock { right: 68px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 背景 -->
+<div id="bg-layer"></div>
+
+<!-- 时钟 -->
+<div id="clock"></div>
+
+<!-- 齿轮 -->
+<div id="gear-btn">⚙</div>
+
+<!-- 面板遮罩 -->
+<div id="panel-overlay"></div>
+
+<!-- 右侧面板 -->
+<div id="settings-panel">
+  <div class="panel-title">设置</div>
+
+  <div class="section-label">搜索引擎</div>
+  <select id="engine-select">
+    <option value="bing">Bing</option>
+    <option value="google">Google</option>
+    <option value="baidu">Baidu</option>
+    <option value="duckduckgo">DuckDuckGo</option>
+    <option value="sogou">Sogou</option>
+  </select>
+
+  <div class="sep"></div>
+
+  <div class="section-label">搜索栏</div>
+
+  <div class="setting-row">
+    <div class="row-header">
+      <label>水平位置</label>
+      <span class="val" id="pos-x-val">50%</span>
+    </div>
+    <input type="range" id="pos-x" min="0" max="100" value="50">
+  </div>
+
+  <div class="setting-row">
+    <div class="row-header">
+      <label>垂直位置</label>
+      <span class="val" id="pos-y-val">50%</span>
+    </div>
+    <input type="range" id="pos-y" min="0" max="100" value="50">
+  </div>
+
+  <div class="setting-row">
+    <div class="row-header">
+      <label>默认透明度</label>
+      <span class="val" id="opacity-def-val">25%</span>
+    </div>
+    <input type="range" id="opacity-def" min="0" max="100" value="25">
+  </div>
+
+  <div class="setting-row">
+    <div class="row-header">
+      <label>悬停透明度</label>
+      <span class="val" id="opacity-hover-val">100%</span>
+    </div>
+    <input type="range" id="opacity-hover" min="0" max="100" value="100">
+  </div>
+
+  <div class="btn-group">
+    <button class="btn" id="reset-search">↺ 还原搜索栏设置</button>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="section-label">背景</div>
+
+  <div class="btn-group">
+    <label class="btn">
+      📁 上传背景
+      <input type="file" accept="image/*,video/*,.gif">
+    </label>
+    <button class="btn" id="reset-bg">↺ 还原默认背景</button>
+  </div>
+</div>
+
+<!-- 搜索栏 -->
+<div id="search-bar">
+  <input id="search-input" type="text" spellcheck="false">
+</div>
+
+<!-- 提示 -->
+<div id="hint">拖拽搜索栏 · 右上角 ⚙ 设置</div>
+
+<script>
+(function() {
+  'use strict';
+
+  const ENGINES = {
+    bing:       q => `https://www.bing.com/search?q=${encodeURIComponent(q)}`,
+    google:     q => `https://www.google.com/search?q=${encodeURIComponent(q)}`,
+    baidu:      q => `https://www.baidu.com/s?wd=${encodeURIComponent(q)}`,
+    duckduckgo: q => `https://duckduckgo.com/?q=${encodeURIComponent(q)}`,
+    sogou:      q => `https://www.sogou.com/web?query=${encodeURIComponent(q)}`,
+  };
+
+  // ── 默认值 ──
+  const DEFAULTS = {
+    posX: 50, posY: 50,
+    opacityDef: 25, opacityHover: 100,
+  };
+
+  // ── Refs ──
+  const $ = id => document.getElementById(id);
+  const bgLayer     = $('bg-layer');
+  const searchBar   = $('search-bar');
+  const searchInput = $('search-input');
+  const gearBtn     = $('gear-btn');
+  const panel       = $('settings-panel');
+  const overlay     = $('panel-overlay');
+
+  const engineSel   = $('engine-select');
+  const posX        = $('pos-x');
+  const posY        = $('pos-y');
+  const opacityDef  = $('opacity-def');
+  const opacityHover= $('opacity-hover');
+  const posXVal     = $('pos-x-val');
+  const posYVal     = $('pos-y-val');
+  const opacityDefVal  = $('opacity-def-val');
+  const opacityHoverVal= $('opacity-hover-val');
+  const resetSearch = $('reset-search');
+  const bgUpload    = document.querySelector('#settings-panel input[type="file"]');
+  const resetBg     = $('reset-bg');
+  const clockEl     = $('clock');
+  const hint        = $('hint');
+
+  // ── 应用搜索栏样式 ──
+  function applySearchStyle() {
+    const ox = parseFloat(posX.value) / 100;
+    const oy = parseFloat(posY.value) / 100;
+    const od = parseFloat(opacityDef.value) / 100;
+    const oh = parseFloat(opacityHover.value) / 100;
+
+    // 当滑块控制时，取消 transform 居中，用百分比定位
+    searchBar.style.transform = 'none';
+    searchBar.style.left = (ox * 100) + '%';
+    searchBar.style.top  = (oy * 100) + '%';
+    // 偏移自身宽高的一半来居中于该点
+    searchBar.style.translate = '-50% -50%';
+
+    // 透明度应用在元素上，覆盖 .search-bar 中的 transition
+    searchBar.style.setProperty('--opacity-default', od);
+    searchBar.style.setProperty('--opacity-hover', oh);
+    searchBar.style.opacity = od;
+
+    // 同步显示值
+    posXVal.textContent    = Math.round(ox * 100) + '%';
+    posYVal.textContent    = Math.round(oy * 100) + '%';
+    opacityDefVal.textContent  = Math.round(od * 100) + '%';
+    opacityHoverVal.textContent = Math.round(oh * 100) + '%';
+  }
+
+  // ── 设置 hover 行为 (用 CSS 变量) ──
+  // 用 CSS 自定义属性来控制 hover 透明度
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = `
+    #search-bar {
+      opacity: var(--opacity-default, 0.25);
+    }
+    #search-bar:hover {
+      opacity: var(--opacity-hover, 1) !important;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+      background: rgba(255,255,255,0.14);
+    }
+  `;
+  document.head.appendChild(styleSheet);
+
+  // ── 面板 ──
+  function openPanel() { panel.classList.add('open'); overlay.classList.add('show'); }
+  function closePanel() { panel.classList.remove('open'); overlay.classList.remove('show'); }
+  gearBtn.addEventListener('click', () => {
+    panel.classList.contains('open') ? closePanel() : openPanel();
+  });
+  overlay.addEventListener('click', closePanel);
+
+  // ── 拖拽 ──
+  let isDragging = false, offX = 0, offY = 0;
+
+  searchBar.addEventListener('mousedown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    isDragging = true;
+    const r = searchBar.getBoundingClientRect();
+    offX = e.clientX - r.left;
+    offY = e.clientY - r.top;
+    // 拖拽时切换到 px 定位
+    searchBar.style.left = r.left + 'px';
+    searchBar.style.top  = r.top + 'px';
+    searchBar.style.translate = 'none';
+    searchBar.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    searchBar.style.left = (e.clientX - offX) + 'px';
+    searchBar.style.top  = (e.clientY - offY) + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    searchBar.style.cursor = 'grab';
+    // 拖拽结束后将 px 位置换算为百分比，同步滑块
+    const r = searchBar.getBoundingClientRect();
+    const pctX = Math.round((r.left / window.innerWidth) * 100);
+    const pctY = Math.round((r.top / window.innerHeight) * 100);
+    posX.value = Math.max(0, Math.min(100, pctX));
+    posY.value = Math.max(0, Math.min(100, pctY));
+    applySearchStyle();
+  });
+
+  // ── 搜索 ──
+  function doSearch() {
+    const q = searchInput.value.trim();
+    if (!q) return;
+    window.open(ENGINES[engineSel.value](q), '_blank');
+  }
+  searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+  // ── 滑块事件 ──
+  posX.addEventListener('input', applySearchStyle);
+  posY.addEventListener('input', applySearchStyle);
+  opacityDef.addEventListener('input', applySearchStyle);
+  opacityHover.addEventListener('input', applySearchStyle);
+
+  // ── 还原搜索栏 ──
+  resetSearch.addEventListener('click', () => {
+    posX.value = DEFAULTS.posX;
+    posY.value = DEFAULTS.posY;
+    opacityDef.value = DEFAULTS.opacityDef;
+    opacityHover.value = DEFAULTS.opacityHover;
+    applySearchStyle();
+    showHint('搜索栏已还原');
+  });
+
+  // ── 引擎切换（无额外视觉反馈，仅逻辑） ──
+  // 无需额外操作
+
+  // ── 背景上传 ──
+  bgUpload.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const url = ev.target.result;
+      const old = document.getElementById('custom-video');
+      if (old) old.remove();
+      if (file.type.startsWith('video/')) {
+        const vid = document.createElement('video');
+        vid.id = 'custom-video';
+        vid.src = url; vid.autoplay = true; vid.loop = true;
+        vid.muted = true; vid.playsInline = true;
+        vid.style.cssText = 'position:fixed;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;';
+        bgLayer.after(vid);
+        bgLayer.style.display = 'none';
+      } else {
+        bgLayer.style.display = '';
+        bgLayer.style.backgroundImage = `url(${url})`;
+        bgLayer.classList.add('uploaded');
+      }
+      showHint('背景已更新');
+      closePanel();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ── 还原背景 ──
+  resetBg.addEventListener('click', () => {
+    const vid = document.getElementById('custom-video');
+    if (vid) vid.remove();
+    bgLayer.style.display = '';
+    bgLayer.style.backgroundImage = '';
+    bgLayer.classList.remove('uploaded');
+    bgUpload.value = '';
+    showHint('背景已还原');
+  });
+
+  // ── 时钟 ──
+  function tick() {
+    clockEl.textContent = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  }
+  tick();
+  setInterval(tick, 10000);
+
+  // ── 提示 ──
+  let t;
+  function showHint(msg) {
+    hint.textContent = msg;
+    hint.classList.add('show');
+    clearTimeout(t);
+    t = setTimeout(() => hint.classList.remove('show'), 2000);
+  }
+
+  // ── 初始化 ──
+  applySearchStyle();
+  setTimeout(() => showHint('拖拽搜索栏 · 右上角 ⚙ 设置'), 1500);
+
+  // ── 窗口尺寸变化时同步拖拽后的百分比 ──
+  // （如果搜索栏是 px 定位，resize 后比例会变，触发一次换算）
+  window.addEventListener('resize', () => {
+    // 检查是否使用了 px 定位（拖拽模式）
+    const left = searchBar.style.left;
+    if (left && left.endsWith('px')) {
+      const r = searchBar.getBoundingClientRect();
+      const pctX = Math.round((r.left / window.innerWidth) * 100);
+      const pctY = Math.round((r.top / window.innerHeight) * 100);
+      posX.value = Math.max(0, Math.min(100, pctX));
+      posY.value = Math.max(0, Math.min(100, pctY));
+      applySearchStyle();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

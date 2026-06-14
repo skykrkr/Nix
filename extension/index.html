@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nix</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="bg-layer"></div>
+
+<div id="clock">
+  <div class="clock-inner"></div>
+  <button class="drag-btn"></button>
+</div>
+
+<div id="gear-btn">⚙</div>
+<div id="panel-overlay"></div>
+
+<div id="settings-panel">
+  <div class="panel-title">设置</div>
+
+  <select id="engine-select">
+    <option value="bing">Bing</option>
+    <option value="google">Google</option>
+    <option value="baidu">Baidu</option>
+    <option value="duckduckgo">DuckDuckGo</option>
+    <option value="sogou">Sogou</option>
+  </select>
+
+  <div class="collapse-section">
+    <div class="collapse-header" data-target="sc"><span class="arrow">▶</span><span>搜索栏</span></div>
+    <div class="collapse-body closed" id="sc">
+      <div class="toggle-row"><label>显示搜索栏</label><label class="toggle-switch"><input type="checkbox" id="sb-toggle" checked><span class="toggle-slider"></span></label></div>
+      <div class="setting-row"><div class="row-header"><label>宽度</label><span class="val" id="swv">520px</span></div><input type="range" id="sw" min="200" max="900" value="520"></div>
+      <div class="setting-row"><div class="row-header"><label>高度</label><span class="val" id="shv">48px</span></div><input type="range" id="sh" min="32" max="80" value="48"></div>
+      <div class="setting-row"><div class="row-header"><label>圆角</label><span class="val" id="srv">50px</span></div><input type="range" id="sr" min="4" max="60" value="50"></div>
+      <div class="setting-row"><div class="row-header"><label>水平位置</label><span class="val" id="sxv">50%</span></div><input type="range" id="sx" min="0" max="100" value="50"></div>
+      <div class="setting-row"><div class="row-header"><label>垂直位置</label><span class="val" id="syv">50%</span></div><input type="range" id="sy" min="0" max="100" value="50"></div>
+      <div class="setting-row"><div class="row-header"><label>默认透明度</label><span class="val" id="sodv">25%</span></div><input type="range" id="sod" min="0" max="100" value="25"></div>
+      <div class="setting-row"><div class="row-header"><label>悬停透明度</label><span class="val" id="sohv">100%</span></div><input type="range" id="soh" min="0" max="100" value="100"></div>
+      <div class="setting-row"><div class="row-header"><label>拖拽钮常显透明度</label><span class="val" id="sdv">10%</span></div><input type="range" id="sd" min="0" max="100" value="10"></div>
+      <div class="btn-group" style="margin-top:2px"><button class="btn" id="reset-search">↺ 还原默认</button></div>
+    </div>
+  </div>
+
+  <div class="collapse-section">
+    <div class="collapse-header" data-target="cc"><span class="arrow">▶</span><span>时间组件</span></div>
+    <div class="collapse-body closed" id="cc">
+      <div class="toggle-row"><label>显示时间</label><label class="toggle-switch"><input type="checkbox" id="ct" checked><span class="toggle-slider"></span></label></div>
+      <div class="setting-row"><div class="row-header"><label>字体颜色</label><span class="val" id="ccolv">白色</span></div><select id="ccol" style="margin-top:2px"><option value="light">白色</option><option value="dark">黑色</option></select></div>
+      <div class="setting-row"><div class="row-header"><label>字号</label><span class="val" id="cszv">100px</span></div><input type="range" id="csz" min="48" max="160" value="100"></div>
+      <div class="setting-row"><div class="row-header"><label>透明度</label><span class="val" id="cov">100%</span></div><input type="range" id="co" min="0" max="100" value="100"></div>
+      <div class="setting-row"><div class="row-header"><label>字重</label><span class="val" id="cfwv">300</span></div><input type="range" id="cfw" min="100" max="900" step="100" value="300"></div>
+      <div class="setting-row"><div class="row-header"><label>水平位置</label><span class="val" id="cxv">50%</span></div><input type="range" id="cx" min="0" max="100" value="50"></div>
+      <div class="setting-row"><div class="row-header"><label>垂直位置</label><span class="val" id="cyv">40%</span></div><input type="range" id="cy" min="0" max="100" value="40"></div>
+      <div class="setting-row"><div class="row-header"><label>拖拽钮常显透明度</label><span class="val" id="cdv">10%</span></div><input type="range" id="cd" min="0" max="100" value="10"></div>
+      <div class="btn-group" style="margin-top:2px"><button class="btn" id="reset-clock">↺ 还原默认</button></div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="collapse-section">
+    <div class="collapse-header" data-target="bgc"><span class="arrow open">▶</span><span>背景</span></div>
+    <div class="collapse-body" id="bgc">
+      <div class="btn-group" style="padding:4px 0">
+        <label class="btn">📁 上传背景<input type="file" accept="image/*,video/*,.gif"></label>
+        <button class="btn" id="reset-bg">↺ 还原默认背景</button>
+      </div>
+      <div class="sec-label">背景库</div>
+      <div class="bg-list" id="bg-list"><div class="bg-empty">暂无已保存背景</div></div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="collapse-section">
+    <div class="collapse-header" data-target="tplc"><span class="arrow open">▶</span><span>模板</span></div>
+    <div class="collapse-body" id="tplc">
+      <div class="tpl-save-row"><input id="tpl-name" placeholder="模板名称…"><button class="btn" id="tpl-save">💾 保存</button></div>
+      <div class="sec-label" style="margin-top:6px">已保存模板（点击切换）</div>
+      <div class="tpl-list" id="tpl-list"><div class="tpl-empty">暂无模板</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="search-bar">
+  <input id="search-input" type="text" spellcheck="false">
+  <button class="drag-btn"></button>
+</div>
+
+<div id="hint">⚪ 底部圆钮拖拽 · ⚙ 齿轮设置</div>
+
+<script src="script.js"></script>
+</body>
+</html>
