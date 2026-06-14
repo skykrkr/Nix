@@ -181,7 +181,10 @@ select option{background:#1a1a2e;color:#eee}
 const ENGINES={bing:q=>`https://www.bing.com/search?q=${encodeURIComponent(q)}`,google:q=>`https://www.google.com/search?q=${encodeURIComponent(q)}`,baidu:q=>`https://www.baidu.com/s?wd=${encodeURIComponent(q)}`,duckduckgo:q=>`https://duckduckgo.com/?q=${encodeURIComponent(q)}`,sogou:q=>`https://www.sogou.com/web?query=${encodeURIComponent(q)}`};
 const DEF={searchBar:{show:true,width:520,height:48,radius:50,posX:50,posY:50,opacityDef:25,opacityHover:100,dragBtnOpacity:10},clock:{show:true,color:'light',fontSize:100,opacity:100,fontWeight:600,posX:50,posY:40,dragBtnOpacity:10},engine:'bing'};
 let state=JSON.parse(JSON.stringify(DEF));
+let _bgBlobUrl=null,_thumbBlobUrls=[];
 (function(){try{const s=JSON.parse(localStorage.getItem('ntp_state'));if(s){Object.assign(state.searchBar,s.searchBar);Object.assign(state.clock,s.clock);if(s.engine)state.engine=s.engine}}catch(e){}})();
+// 首次启动：小屏幕自适应默认位置（无保存状态时生效）
+(function(){if(innerHeight<700&&!localStorage.getItem('ntp_state')){const cH=state.clock.fontSize,gap=30,safeTop=Math.max(10,(innerHeight-cH-gap-state.searchBar.height)/2);state.clock.posY=(safeTop+cH/2)/innerHeight*100}})();
 const $=id=>document.getElementById(id);
 const bgL=$('bg-layer'),sb=$('search-bar'),si=$('search-input');
 const gear=$('gear-btn'),pn=$('settings-panel'),ov=$('panel-overlay');
@@ -257,7 +260,7 @@ ct.addEventListener('change',onCS);ccol.addEventListener('change',onCS);csz.addE
 co.addEventListener('input',onCS);cfw.addEventListener('input',onCS);cx.addEventListener('input',onCS);
 cy.addEventListener('input',onCS);cd.addEventListener('input',onCS);es.addEventListener('change',()=>{state.engine=es.value});
 rSb.addEventListener('click',()=>{Object.assign(state.searchBar,DEF.searchBar);syncSliders();applyAll();toast('搜索栏已还原')});
-rClk.addEventListener('click',()=>{Object.assign(state.clock,DEF.clock);syncSliders();applyAll();toast('时间已还原')});
+rClk.addEventListener('click',()=>{Object.assign(state.clock,DEF.clock);if(innerHeight<700){const cH=state.clock.fontSize,gap=30,safeTop=Math.max(10,(innerHeight-cH-gap-state.searchBar.height)/2);state.clock.posY=(safeTop+cH/2)/innerHeight*100}syncSliders();applyAll();toast('时间已还原')});
 function op(){pn.classList.add('open');ov.classList.add('show')}
 function cp(){pn.classList.remove('open');ov.classList.remove('show')}
 gear.addEventListener('click',()=>pn.classList.contains('open')?cp():op());
@@ -268,10 +271,11 @@ document.querySelectorAll('.drag-btn').forEach(btn=>{
   const p=btn.parentElement;let drag=null;
   btn.addEventListener('mousedown',e=>{const r=p.getBoundingClientRect();drag={ox:e.clientX-r.left,oy:e.clientY-r.top,sx:r.left,sy:r.top};e.preventDefault()});
   document.addEventListener('mousemove',e=>{if(!drag)return;p.style.transform='translate('+(e.clientX-drag.ox-drag.sx)+'px,'+(e.clientY-drag.oy-drag.sy)+'px)'});
-  document.addEventListener('mouseup',()=>{if(!drag)return;const r=p.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;p.style.transform='';if(p===clk){state.clock.posX=(cx/innerWidth)*100;state.clock.posY=(cy/innerHeight)*100}else{const s=posToPct(state.searchBar.width,state.searchBar.height,r.left,r.top);state.searchBar.posX=s.pX;state.searchBar.posY=s.pY}drag=null;syncSliders();applyAll()});
+  document.addEventListener('mouseup',()=>{if(!drag)return;const r=p.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;p.style.transform='';if(p===clk){state.clock.posX=(cx/innerWidth)*100;state.clock.posY=(cy/innerHeight)*100}else{const s=posToPct(state.searchBar.width,state.searchBar.height,r.left,r.top);state.searchBar.posX=s.pX;state.searchBar.posY=s.pY}drag=null;syncSliders();applyAll();try{localStorage.setItem('ntp_state',JSON.stringify(sSt()))}catch(e){}});
 });
 function odb(){return new Promise((res,rej)=>{const r=indexedDB.open('ntp-bg-store',2);r.onupgradeneeded=e=>{const d=e.target.result;if(d.objectStoreNames.contains('backgrounds'))d.deleteObjectStore('backgrounds');if(!d.objectStoreNames.contains('bgs'))d.createObjectStore('bgs',{keyPath:'id'})};r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error)})}
-async function bgP(id,n,t,d){const db=await odb(),tx=db.transaction('bgs','readwrite');tx.objectStore('bgs').put({id,name:n,type:t,data:d,at:Date.now()});await new Promise(r=>tx.oncomplete=r)}
+// 存储 Blob 二进制，不再用 base64 字符串
+async function bgP(id,n,t,b){const db=await odb(),tx=db.transaction('bgs','readwrite');tx.objectStore('bgs').put({id,name:n,type:t,data:b,at:Date.now()});await new Promise(r=>tx.oncomplete=r)}
 async function bgG(id){const db=await odb();return new Promise((res,rej)=>{const r=db.transaction('bgs','readonly').objectStore('bgs').get(id);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 async function bgD(id){const db=await odb(),tx=db.transaction('bgs','readwrite');tx.objectStore('bgs').delete(id);await new Promise(r=>tx.oncomplete=r)}
 function gBM(){try{return JSON.parse(localStorage.getItem('ntp_bg_meta')||'[]')}catch{return[]}}
@@ -279,13 +283,16 @@ function sBM(m){localStorage.setItem('ntp_bg_meta',JSON.stringify(m))}
 function gAB(){return localStorage.getItem('ntp_active_bg')||null}
 function sAB(id){if(id)localStorage.setItem('ntp_active_bg',id);else localStorage.removeItem('ntp_active_bg')}
 function buildBgLst(){
+  // 清除旧缩略图 blob URL
+  for(const u of _thumbBlobUrls)URL.revokeObjectURL(u);_thumbBlobUrls=[];
   const meta=gBM(),aid=gAB();
   if(!meta.length){bgLst.innerHTML='<div class="bg-empty">暂无已保存背景</div>';return}
   bgLst.innerHTML='';
   for(const m of meta){
     const el=document.createElement('div');el.className='bg-item'+(m.id===aid?' active':'');el.dataset.bgId=m.id;
     const th=document.createElement('div');th.className='bg-thumb'+(m.type==='video'?' vt':'');
-    if(m.type==='video')th.textContent='🎬';else bgG(m.id).then(e=>{if(e&&e.type!=='image')th.style.backgroundImage='url('+e.data+')'});
+    if(m.type==='video')th.textContent='🎬'
+    else bgG(m.id).then(e=>{if(e&&e.data){const u=typeof e.data==='string'?e.data:URL.createObjectURL(e.data);if(typeof e.data!=='string')_thumbBlobUrls.push(u);th.style.backgroundImage='url('+u+')'}});
     const nm=document.createElement('span');nm.className='bg-name';nm.textContent=m.name;
     const dl=document.createElement('button');dl.className='bg-del';dl.textContent='×';
     dl.addEventListener('click',async e=>{e.stopPropagation();await bgD(m.id);const m2=gBM().filter(x=>x.id!==m.id);sBM(m2);if(gAB()===m.id)rBgF();buildBgLst();toast('已删除: '+m.name)});
@@ -296,15 +303,47 @@ function buildBgLst(){
 }
 function uBgA(id){bgLst.querySelectorAll('.bg-item').forEach(e=>e.classList.toggle('active',e.dataset.bgId===id))}
 async function aBg(id){
+  // 废弃旧 blob URL
+  if(_bgBlobUrl){URL.revokeObjectURL(_bgBlobUrl);_bgBlobUrl=null}
   if(!id){rBgF();sAB(null);uBgA(null);return}
+  bgL.style.display='none';bgL.style.backgroundImage='';bgL.classList.remove('uploaded');
   const e=await bgG(id);if(!e){rBgF();sAB(null);uBgA(null);return}
   sAB(id);uBgA(id);
   const v=document.getElementById('cv');if(v)v.remove();
-  if(e.type==='video'){const v2=document.createElement('video');v2.id='cv';v2.src=e.data;v2.autoplay=true;v2.loop=true;v2.muted=true;v2.playsInline=true;v2.disablePictureInPicture=true;v2.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');v2.style.cssText='position:fixed;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;';bgL.after(v2);bgL.style.display='none'}
-  else{bgL.style.display='';bgL.style.backgroundImage='url('+e.data+')';bgL.classList.add('uploaded')}
+  // 兼容旧数据（string=base64）和新数据（Blob=blob URL）
+  const url=typeof e.data==='string'?e.data:URL.createObjectURL(e.data);
+  if(typeof e.data!=='string')_bgBlobUrl=url;
+  if(e.type==='video'){
+    const v2=document.createElement('video');v2.id='cv';v2.src=url;
+    v2.autoplay=true;v2.loop=true;v2.muted=true;v2.playsInline=true;
+    v2.disablePictureInPicture=true;v2.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');
+    v2.style.cssText='position:fixed;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;';
+    bgL.after(v2)
+  }else{bgL.style.display='';bgL.style.backgroundImage='url('+url+')';bgL.classList.add('uploaded')}
 }
-function rBgF(){const v=document.getElementById('cv');if(v)v.remove();bgL.style.display='';bgL.style.backgroundImage='';bgL.classList.remove('uploaded');bgUp.value='';sAB(null);uBgA(null)}
-bgUp.addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;const meta=gBM();if(meta.some(x=>x.name===f.name)){toast('已有同名背景: '+f.name);e.target.value='';return}const r=new FileReader();r.onload=async ev=>{const du=ev.target.result,id='bg_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),t=f.type.startsWith('video/')?'video':'image';await bgP(id,f.name,t,du);meta.push({id,name:f.name,type:t,at:Date.now()});sBM(meta);await aBg(id);buildBgLst();toast('背景已保存: '+f.name);cp()};r.readAsDataURL(f)});
+async function cImg(f,mP){
+  const i=await new Promise((y,n)=>{const I=new Image();I.onload=()=>y(I);I.onerror=n;I.src=URL.createObjectURL(f)});
+  if(i.width*i.height<=mP){URL.revokeObjectURL(i.src);return null}
+  const s=Math.sqrt(mP/(i.width*i.height)),c=document.createElement('canvas');
+  c.width=Math.round(i.width*s);c.height=Math.round(i.height*s);
+  c.getContext('2d').drawImage(i,0,0,c.width,c.height);URL.revokeObjectURL(i.src);
+  return new Promise(r=>c.toBlob(r,'image/jpeg',0.85))
+}
+function rBgF(){if(_bgBlobUrl){URL.revokeObjectURL(_bgBlobUrl);_bgBlobUrl=null}const v=document.getElementById('cv');if(v)v.remove();bgL.style.display='';bgL.style.backgroundImage='';bgL.classList.remove('uploaded');bgUp.value='';sAB(null);uBgA(null)}
+bgUp.addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f)return;
+  const meta=gBM();if(meta.some(x=>x.name===f.name)){toast('已有同名背景: '+f.name);e.target.value='';return}
+  let t=f.type.startsWith('video/')?'video':'image';
+  let blobToStore=f; // 默认存原始文件（Blob）
+  if(t==='image'){
+    const cp=await cImg(f,1920*1080);
+    if(cp){blobToStore=cp;toast('图片已压缩 ('+Math.round(f.size/1024)+'KB→'+Math.round(cp.size/1024)+'KB)')}
+  }
+  const id='bg_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  await bgP(id,f.name,t,blobToStore);
+  meta.push({id,name:f.name,type:t,at:Date.now()});sBM(meta);
+  await aBg(id);buildBgLst();toast('背景已保存: '+f.name);cp()
+});
 rBg.addEventListener('click',()=>{rBgF();toast('背景已还原')});
 (async()=>{const a=gAB();if(a)await aBg(a);buildBgLst()})();
 function tk(){ci.textContent=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}
