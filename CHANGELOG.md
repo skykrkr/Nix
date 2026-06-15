@@ -20,6 +20,11 @@
 - 音量滑块调高时调用 `v.play()` 重激活音频解码器
 - 返回标签页同样恢复
 
+### 🐛 Bug 修复
+
+- **BUG-004（搜索栏中文双重编码）：** `getSearchUrl()` 移除重复的 `encodeURIComponent()`，`ENGINES` 函数内部已有编码
+- **BUG-005（切换有声背景需手动调音量）：** `aBg()` 中在 `v2.play()` 前设 `muted=false`，利用 click user gesture 激活音频
+
 ---
 
 ## v4.2 — 2026-06-15
