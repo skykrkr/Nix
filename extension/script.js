@@ -1,11 +1,12 @@
 (function(){
 'use strict';
 const ENGINES={bing:q=>`https://www.bing.com/search?q=${encodeURIComponent(q)}`,google:q=>`https://www.google.com/search?q=${encodeURIComponent(q)}`,baidu:q=>`https://www.baidu.com/s?wd=${encodeURIComponent(q)}`,duckduckgo:q=>`https://duckduckgo.com/?q=${encodeURIComponent(q)}`,sogou:q=>`https://www.sogou.com/web?query=${encodeURIComponent(q)}`};
-const DEF={searchBar:{show:true,width:520,height:48,radius:50,posX:50,posY:50,opacityDef:25,opacityHover:100,dragBtnOpacity:10},clock:{show:true,color:'light',fontSize:100,opacity:100,fontWeight:600,posX:50,posY:40,dragBtnOpacity:10},engine:'bing'};
+const DEF={searchBar:{show:true,width:520,height:48,radius:50,posX:50,posY:50,opacityDef:25,opacityHover:100,dragBtnOpacity:10},clock:{show:true,color:'light',fontSize:100,opacity:100,fontWeight:600,posX:50,posY:40,dragBtnOpacity:10},engine:'bing',videoVolume:0};
 let state=JSON.parse(JSON.stringify(DEF));
 let _bgBlobUrl=null,_thumbBlobUrls=[];
-(function(){try{const s=JSON.parse(localStorage.getItem('ntp_state'));if(s){Object.assign(state.searchBar,s.searchBar);Object.assign(state.clock,s.clock);if(s.engine)state.engine=s.engine}}catch(e){}})();
-(function(){if(innerHeight<700&&!localStorage.getItem('ntp_state')){const cH=state.clock.fontSize,gap=30,safeTop=Math.max(10,(innerHeight-cH-gap-state.searchBar.height)/2);state.clock.posY=(safeTop+cH/2)/innerHeight*100}})();
+(function(){try{const s=JSON.parse(localStorage.getItem('ntp_state'));if(s){Object.assign(state.searchBar,s.searchBar);Object.assign(state.clock,s.clock);if(s.engine)state.engine=s.engine;if(s.videoVolume!==undefined)state.videoVolume=s.videoVolume}}catch(e){}})();
+(function(){if(!localStorage.getItem('ntp_state'))calcRelativeClockPos()})();
+function calcRelativeClockPos(){const sb=state.searchBar,clk=state.clock,clkHalf=clk.fontSize/2,btnH=30,gap=30,sbTop=innerHeight*sb.posY/100-sb.height/2,cc=sbTop-gap-btnH-clkHalf;clk.posY=Math.max(5,Math.round(cc/innerHeight*100))}
 const $=id=>document.getElementById(id);
 const bgL=$('bg-layer'),sb=$('search-bar'),si=$('search-input');
 const gear=$('gear-btn'),pn=$('settings-panel'),ov=$('panel-overlay');
@@ -19,6 +20,7 @@ const rSb=$('reset-search'),ct=$('ct'),ccol=$('ccol'),ccolv=$('ccolv');
 const csz=$('csz'),cszv=$('cszv'),co=$('co'),cov=$('cov'),cfw=$('cfw'),cfwv=$('cfwv');
 const cx=$('cx'),cxv=$('cxv'),cy=$('cy'),cyv=$('cyv'),rClk=$('reset-clock');
 const sd=$('sd'),sdv=$('sdv'),cd=$('cd'),cdv=$('cdv');
+const vol=$('vol'),vv=$('vv');
 const inj=document.createElement('style');document.head.appendChild(inj);
 function injCSS(){
   const s=state.searchBar,pl=Math.round(s.height*.5),f=Math.round(s.height*.34);
@@ -52,6 +54,7 @@ function applyAll(){
   sod.value=s.opacityDef;soh.value=s.opacityHover;ccol.value=c.color;csz.value=c.fontSize;
   co.value=c.opacity;cfw.value=c.fontWeight;cx.value=Math.round(c.posX);cy.value=Math.round(c.posY);ct.checked=c.show;
   sdv.textContent=s.dragBtnOpacity+'%';cdv.textContent=c.dragBtnOpacity+'%';
+vv.textContent=state.videoVolume+'%';vol.value=state.videoVolume;
   autoSave();
 }
 function syncSliders(){
@@ -63,6 +66,7 @@ function syncSliders(){
   ccolv.textContent=c.color==='light'?'白色':'黑色';
   sd.value=s.dragBtnOpacity;sdv.textContent=s.dragBtnOpacity+'%';
   cd.value=c.dragBtnOpacity;cdv.textContent=c.dragBtnOpacity+'%';
+vv.textContent=state.videoVolume+'%';vol.value=state.videoVolume;
 }
 function onSS(e){
   const s=state.searchBar;s.show=sbTog.checked;s.width=+sw.value;s.height=+sh.value;
@@ -80,8 +84,9 @@ sod.addEventListener('input',onSS);soh.addEventListener('input',onSS);sd.addEven
 ct.addEventListener('change',onCS);ccol.addEventListener('change',onCS);csz.addEventListener('input',onCS);
 co.addEventListener('input',onCS);cfw.addEventListener('input',onCS);cx.addEventListener('input',onCS);
 cy.addEventListener('input',onCS);cd.addEventListener('input',onCS);es.addEventListener('change',()=>{state.engine=es.value});
+vol.addEventListener('input',()=>{state.videoVolume=+vol.value;vv.textContent=vol.value+'%';const v=document.getElementById('cv');if(v){if(state.videoVolume>0){v.muted=false;v.volume=state.videoVolume/100}else{v.muted=true}}autoSave()});
 rSb.addEventListener('click',()=>{Object.assign(state.searchBar,DEF.searchBar);syncSliders();applyAll();toast('搜索栏已还原')});
-rClk.addEventListener('click',()=>{Object.assign(state.clock,DEF.clock);if(innerHeight<700){const cH=state.clock.fontSize,gap=30,safeTop=Math.max(10,(innerHeight-cH-gap-state.searchBar.height)/2);state.clock.posY=(safeTop+cH/2)/innerHeight*100}syncSliders();applyAll();toast('时间已还原')});
+rClk.addEventListener('click',()=>{Object.assign(state.clock,DEF.clock);calcRelativeClockPos();syncSliders();applyAll();toast('时间已还原')});
 function op(){pn.classList.add('open');ov.classList.add('show')}
 function cp(){pn.classList.remove('open');ov.classList.remove('show')}
 gear.addEventListener('click',()=>pn.classList.contains('open')?cp():op());
@@ -105,7 +110,7 @@ function gAB(){return localStorage.getItem('ntp_active_bg')||null}
 function sAB(id){if(id)localStorage.setItem('ntp_active_bg',id);else localStorage.removeItem('ntp_active_bg')}
 function buildBgLst(){
   for(const u of _thumbBlobUrls)URL.revokeObjectURL(u);_thumbBlobUrls=[];
-  const meta=gBM(),aid=gAB();
+  const meta=gBM().sort((a,b)=>b.at-a.at),aid=gAB();
   if(!meta.length){bgLst.innerHTML='<div class="bg-empty">暂无已保存背景</div>';return}
   bgLst.innerHTML='';
   for(const m of meta){
@@ -133,7 +138,8 @@ async function aBg(id){
   if(typeof e.data!=='string')_bgBlobUrl=url;
   if(e.type==='video'){
     const v2=document.createElement('video');v2.id='cv';v2.src=url;
-    v2.autoplay=true;v2.loop=true;v2.muted=true;v2.playsInline=true;
+    v2.autoplay=true;v2.loop=true;v2.playsInline=true;
+    if(state.videoVolume>0){v2.muted=false;v2.volume=state.videoVolume/100}else{v2.muted=true}
     v2.disablePictureInPicture=true;v2.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');
     v2.style.cssText='position:fixed;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;';
     bgL.after(v2)
@@ -162,15 +168,15 @@ bgUp.addEventListener('change',async e=>{
   meta.push({id,name:f.name,type:t,at:Date.now()});sBM(meta);
   await aBg(id);buildBgLst();toast('背景已保存: '+f.name);cp()
 });
-rBg.addEventListener('click',()=>{rBgF();toast('背景已还原')});
+rBg.addEventListener('click',()=>{state.videoVolume=0;vol.value=0;vv.textContent='0%';rBgF();autoSave();toast('背景已还原')});
 (async()=>{const a=gAB();if(a)await aBg(a);buildBgLst()})();
 function tk(){ci.textContent=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}
 tk();setInterval(tk,10000);
 function gTP(){try{return JSON.parse(localStorage.getItem('ntp_templates')||'[]')}catch{return[]}}
 function sTP(t){localStorage.setItem('ntp_templates',JSON.stringify(t))}
-function sSt(){return{searchBar:{...state.searchBar},clock:{...state.clock},engine:state.engine,backgroundId:gAB()}}
+function sSt(){return{searchBar:{...state.searchBar},clock:{...state.clock},engine:state.engine,backgroundId:gAB(),videoVolume:state.videoVolume}}
 let _as;function autoSave(){clearTimeout(_as);_as=setTimeout(()=>{try{localStorage.setItem('ntp_state',JSON.stringify(sSt()))}catch(e){}},500)}
-function aTP(tpl){Object.assign(state.searchBar,tpl.searchBar);Object.assign(state.clock,tpl.clock);state.engine=tpl.engine;syncSliders();applyAll();es.value=tpl.engine;if(tpl.backgroundId)aBg(tpl.backgroundId);else rBgF();toast('已切换: '+tpl.name)}
+function aTP(tpl){Object.assign(state.searchBar,tpl.searchBar);Object.assign(state.clock,tpl.clock);state.engine=tpl.engine;if(tpl.videoVolume!==undefined)state.videoVolume=tpl.videoVolume;syncSliders();applyAll();es.value=tpl.engine;if(tpl.backgroundId)aBg(tpl.backgroundId);else rBgF();toast('已切换: '+tpl.name)}
 function bTP(){
   const tpls=gTP();if(!tpls.length){tplLst.innerHTML='<div class="tpl-empty">暂无模板</div>';return}
   tplLst.innerHTML=tpls.map((t,i)=>'<div class="tpl-item" data-idx="'+i+'"><span class="tpl-name">'+eH(t.name)+'</span><button class="tpl-del" data-idx="'+i+'">×</button></div>').join('');
@@ -183,4 +189,5 @@ function eH(s){const d=document.createElement('div');d.textContent=s;return d.in
 let tt;function toast(m){ht.textContent=m;ht.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>ht.classList.remove('show'),2000)}
 applyAll();bTP();setTimeout(()=>toast('⚪ 底部圆钮拖拽 · ⚙ 齿轮设置'),1500);
 let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(applyAll,150)});
+document.addEventListener('visibilitychange',()=>{const v=document.getElementById('cv');if(!v)return;if(document.hidden){v.muted=true}else{if(state.videoVolume>0){v.muted=false;v.volume=state.videoVolume/100}else{v.muted=true}}});
 })();
