@@ -1,19 +1,35 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;user-select:none;background:#0a0a0f}
+
+/* ── CSS Custom Properties (set dynamically by JS) ── */
+:root{--sb-width:520px;--sb-height:48px;--sb-pad:24px;--sb-radius:50px;--sb-bg:rgba(255,255,255,.10);--sb-bg-hover:rgba(255,255,255,.14);--sb-font-size:16px;--sb-input-opacity:.25;--clk-color:#fff;--clk-opacity:1}
+
+/* ── Background ── */
 #bg-layer{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e,#302b63,#0f0c29);background-size:400% 400%;animation:gradientFlow 12s ease infinite;transition:background-image .5s ease}
 @keyframes gradientFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 #bg-layer.uploaded{animation:none;background-size:cover;background-position:center;background-repeat:no-repeat}
-#search-bar{position:fixed;z-index:5;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);border-radius:50px;box-shadow:0 4px 30px rgba(0,0,0,.2);transition:box-shadow .35s ease,background .35s ease;display:block}
-#search-bar:hover{box-shadow:0 8px 40px rgba(0,0,0,.4);background:rgba(255,255,255,.14)}
+
+/* ── Search Bar ── */
+#search-bar{position:fixed;z-index:5;background:var(--sb-bg);border:1px solid rgba(255,255,255,.12);border-radius:var(--sb-radius);width:var(--sb-width);height:var(--sb-height);padding:0 var(--sb-pad);box-shadow:0 4px 30px rgba(0,0,0,.2);transition:box-shadow .35s ease,background .35s ease;display:block}
+#search-bar:hover{box-shadow:0 8px 40px rgba(0,0,0,.4);background:var(--sb-bg-hover)}
 #search-bar.hidden{display:none}
-#search-input{display:block;width:100%;background:transparent;border:none;outline:none;color:rgba(0,0,0,.85);padding:0;font-family:inherit;caret-color:rgba(0,0,0,.5);transition:opacity .35s ease}
+#search-input{display:block;width:100%;background:transparent;border:none;outline:none;color:rgba(0,0,0,.85);padding:0;font-family:inherit;caret-color:rgba(0,0,0,.5);font-size:var(--sb-font-size);line-height:var(--sb-height);opacity:var(--sb-input-opacity);transition:opacity .35s ease}
+#search-bar:hover #search-input,#search-input:focus{opacity:1}
+
+/* ── Drag Button ── */
 .drag-btn{position:absolute;left:50%;bottom:-30px;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;border:none;cursor:grab;opacity:1!important;z-index:1;transition:background .25s ease;background:rgba(255,255,255,.2)}
 .drag-btn:hover{background:rgba(255,255,255,.6)!important}.drag-btn:active{cursor:grabbing}
+
+/* ── Clock ── */
 #clock{position:fixed;z-index:4;font-weight:300;letter-spacing:1px;font-variant-numeric:tabular-nums;display:none}
 #clock.show{display:block}
-#clock .clock-inner{line-height:1;pointer-events:none}
+#clock .clock-inner{line-height:1;pointer-events:none;opacity:var(--clk-opacity);color:var(--clk-color)}
+
+/* ── Gear ── */
 #gear-btn{position:fixed;top:24px;right:24px;z-index:20;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.06);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.15;transition:opacity .35s ease,background .3s ease}
 #gear-btn:hover{opacity:1;background:rgba(255,255,255,.12)}
+
+/* ── Settings Panel ── */
 #settings-panel{position:fixed;top:0;right:0;z-index:15;width:320px;height:100vh;background:rgba(18,16,36,.82);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-left:1px solid rgba(255,255,255,.08);padding:64px 20px 20px;transform:translateX(100%);transition:transform .35s cubic-bezier(.22,1,.36,1);overflow-y:auto;display:flex;flex-direction:column;gap:2px}
 #settings-panel.open{transform:translateX(0)}
 #panel-overlay{position:fixed;inset:0;z-index:14;background:transparent;display:none}

@@ -1,5 +1,27 @@
 # Changelog
 
+## v4.3 — 2026-06-15
+
+代码重构 + autoplay 策略修复。
+
+### 🧹 代码重构
+
+- CSS custom properties 替代 `injCSS()` 字符串拼接注入样式
+- `applyAll()` 拆分为 `applyCSS()` / `applyPositions()` / `syncSlidersUI()` / `autoSave()`
+- 删除冗余 `syncSliders()`，合并入 `syncSlidersUI()`
+- 加 `clamp()` / `getSearchUrl()` / `safeBgGet()` / `safeBgDel()` 辅助函数
+- IndexedDB 操作 try/catch 包装 + `cImg()` 错误兜底
+- 上传失败 toast 提示
+
+### 🎵 音频策略修复
+
+- 视频创建始终 `muted=true` 安全 autoplay，不再直接 `muted=false`
+- 首次用户交互（`pointerdown`）触发 `activateAudio()` 解除静音
+- 音量滑块调高时调用 `v.play()` 重激活音频解码器
+- 返回标签页同样恢复
+
+---
+
 ## v4.2 — 2026-06-15
 
 视频声音控制 + 相对定位 + 背景库排序。
