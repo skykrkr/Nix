@@ -20,7 +20,7 @@ const clamp=(min,v,max)=>v<min?min:v>max?max:+v;
 function calcPos(w,h,pX,pY){return{l:(innerWidth*pX/100)-w/2,t:(innerHeight*pY/100)-h/2}}
 function posToPct(w,h,l,t){return{pX:((l+w/2)/innerWidth)*100,pY:((t+h/2)/innerHeight)*100}}
 function calcRelativeClockPos(){const sb=state.searchBar,clk=state.clock,clkHalf=clk.fontSize/2,btnH=30,gap=30,sbTop=innerHeight*sb.posY/100-sb.height/2,cc=sbTop-gap-btnH-clkHalf;clk.posY=Math.max(5,Math.round(cc/innerHeight*100))}
-function getSearchUrl(engine,q){return(ENGINES[engine]||ENGINES.bing)(encodeURIComponent(q.trim()))}
+function getSearchUrl(engine,q){return(ENGINES[engine]||ENGINES.bing)(q.trim())}
 
 /* ═══════════════════════════ DOM Refs ═══════════════════════════ */
 const bgL=$('bg-layer'),sb=$('search-bar'),si=$('search-input');
@@ -175,8 +175,7 @@ async function aBg(id){
   if(e.type==='video'){
     const v2=document.createElement('video');v2.id='cv';v2.src=url;
     v2.autoplay=true;v2.loop=true;v2.muted=true;v2.playsInline=true;
-    // Autoplay succeeds muted. Unmute after playback starts if user had volume set.
-    v2.play().catch(()=>{})
+    if(state.videoVolume>0){v2.muted=false;v2.volume=state.videoVolume/100;v2.play().catch(()=>{v2.muted=true})}else{v2.play().catch(()=>{})}
     v2.disablePictureInPicture=true;v2.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');
     v2.style.cssText='position:fixed;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;';
     bgL.after(v2)
