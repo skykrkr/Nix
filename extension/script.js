@@ -7,19 +7,21 @@ const DEF={searchBar:{show:true,width:520,height:48,radius:50,posX:50,posY:50,op
 
 /* ═══════════════════════════ State ═══════════════════════════ */
 let state=JSON.parse(JSON.stringify(DEF));
-let _bgBlobUrl=null,_thumbBlobUrls=[];
+let _bgBlobUrl=null,_thumbBlobUrls=[],_cv=null;
 
 // Restore saved state
 (function(){try{const s=JSON.parse(localStorage.getItem('ntp_state'));if(s){Object.assign(state.searchBar,s.searchBar);Object.assign(state.clock,s.clock);if(s.engine)state.engine=s.engine;if(s.videoVolume!==undefined)state.videoVolume=s.videoVolume}}catch(e){}})();
-// First load: clock position relative to search bar
-(function(){if(!localStorage.getItem('ntp_state'))calcRelativeClockPos()})();
+// Compute clock posY as center of composite block above search bar
+function calcBlockLayout(){const clkH=DEF.clock.fontSize,gap=30,sbH=DEF.searchBar.height,totalH=clkH+gap+sbH,topY=(innerHeight-totalH)/2;return{topY,clkH,gap,sbH}}
+function computeClockPosY(){const b=calcBlockLayout();return Math.round((b.topY+b.clkH/2)/innerHeight*100)}
+function computeSearchBarPosY(){const b=calcBlockLayout();return Math.round((b.topY+b.clkH+b.gap+b.sbH/2)/innerHeight*100)}
+// First load: compute composite block layout (clock above search bar, block centered)
+(function(){if(!localStorage.getItem('ntp_state')){state.clock.posY=computeClockPosY();state.searchBar.posY=computeSearchBarPosY()}})();
 
 /* ═══════════════════════════ Helpers ═══════════════════════════ */
 const $=id=>document.getElementById(id);
-const clamp=(min,v,max)=>v<min?min:v>max?max:+v;
 function calcPos(w,h,pX,pY){return{l:(innerWidth*pX/100)-w/2,t:(innerHeight*pY/100)-h/2}}
 function posToPct(w,h,l,t){return{pX:((l+w/2)/innerWidth)*100,pY:((t+h/2)/innerHeight)*100}}
-function calcRelativeClockPos(){const sb=state.searchBar,clk=state.clock,clkHalf=clk.fontSize/2,btnH=30,gap=30,sbTop=innerHeight*sb.posY/100-sb.height/2,cc=sbTop-gap-btnH-clkHalf;clk.posY=Math.max(5,Math.round(cc/innerHeight*100))}
 function getSearchUrl(engine,q){return(ENGINES[engine]||ENGINES.bing)(q.trim())}
 
 /* ═══════════════════════════ DOM Refs ═══════════════════════════ */
@@ -108,16 +110,16 @@ ct.addEventListener('change',onCS);ccol.addEventListener('change',onCS);csz.addE
 co.addEventListener('input',onCS);cfw.addEventListener('input',onCS);cx.addEventListener('input',onCS);
 cy.addEventListener('input',onCS);cd.addEventListener('input',onCS);
 es.addEventListener('change',()=>{state.engine=es.value;autoSave()});
-vol.addEventListener('input',()=>{state.videoVolume=+vol.value;vv.textContent=vol.value+'%';const v=document.getElementById('cv');if(v)activateAudio(v);autoSave()});
-rSb.addEventListener('click',()=>{Object.assign(state.searchBar,DEF.searchBar);applyAll();toast('搜索栏已还原')});
-rClk.addEventListener('click',()=>{Object.assign(state.clock,DEF.clock);calcRelativeClockPos();applyAll();toast('时间已还原')});
+vol.addEventListener('input',()=>{state.videoVolume=+vol.value;vv.textContent=vol.value+'%';if(_cv)activateAudio(_cv);autoSave()});
+rSb.addEventListener('click',()=>{Object.assign(state.searchBar,DEF.searchBar);state.searchBar.posY=computeSearchBarPosY();applyAll();toast('搜索栏已还原')});
+rClk.addEventListener('click',()=>{Object.assign(state.clock,DEF.clock);state.clock.posY=computeClockPosY();applyAll();toast('时间已还原')});
 
 /* ═══════════════════════════ Panel Toggle ═══════════════════════════ */
 function op(){pn.classList.add('open');ov.classList.add('show')}
 function cp(){pn.classList.remove('open');ov.classList.remove('show')}
 gear.addEventListener('click',()=>pn.classList.contains('open')?cp():op());
 ov.addEventListener('click',cp);
-document.querySelectorAll('.collapse-header').forEach(h=>{h.addEventListener('click',()=>{const t=document.getElementById(h.dataset.target);if(!t)return;h.querySelector('.arrow').classList.toggle('open');t.classList.toggle('closed')})});
+document.querySelectorAll('.collapse-header').forEach(h=>{h.addEventListener('click',()=>{const t=document.getElementById(h.dataset.target);if(!t)return;h.querySelector('.arrow').classList.toggle('open');if(t.classList.contains('closed')){t.classList.remove('closed');t.style.maxHeight=t.scrollHeight+'px'}else{t.style.maxHeight='0';t.addEventListener('transitionend',()=>t.classList.add('closed'),{once:true})}})});
 
 /* ═══════════════════════════ Search ═══════════════════════════ */
 si.addEventListener('keydown',e=>{if(e.key==='Enter'){const q=si.value.trim();if(q)window.open(getSearchUrl(es.value,q),'_blank')}});
@@ -153,7 +155,7 @@ function buildBgLst(){
     const el=document.createElement('div');el.className='bg-item'+(m.id===aid?' active':'');el.dataset.bgId=m.id;
     const th=document.createElement('div');th.className='bg-thumb'+(m.type==='video'?' vt':'');
     if(m.type==='video')th.textContent='🎬'
-    else safeBgGet(m.id).then(e=>{if(e&&e.data){const u=typeof e.data==='string'?e.data:URL.createObjectURL(e.data);if(typeof e.data!=='string')_thumbBlobUrls.push(u);th.style.backgroundImage='url('+u+')'}}).catch(()=>{});
+    else safeBgGet(m.id).then(e=>{if(e&&e.data){const u=getMediaUrl(e.data);if(isBlobData(e.data))_thumbBlobUrls.push(u);th.style.backgroundImage='url('+u+')'}}).catch(()=>{});
     const nm=document.createElement('span');nm.className='bg-name';nm.textContent=m.name;
     const dl=document.createElement('button');dl.className='bg-del';dl.textContent='×';
     dl.addEventListener('click',async e=>{e.stopPropagation();await safeBgDel(m.id);const m2=gBM().filter(x=>x.id!==m.id);sBM(m2);if(gAB()===m.id)rBgF();buildBgLst();toast('已删除: '+m.name)});
@@ -169,16 +171,16 @@ async function aBg(id){
   bgL.style.display='none';bgL.style.backgroundImage='';bgL.classList.remove('uploaded');
   const e=await safeBgGet(id);if(!e){rBgF();sAB(null);uBgA(null);return}
   sAB(id);uBgA(id);
-  const v=document.getElementById('cv');if(v)v.remove();
-  const url=typeof e.data==='string'?e.data:URL.createObjectURL(e.data);
-  if(typeof e.data!=='string')_bgBlobUrl=url;
+  if(_cv){_cv.remove();_cv=null}
+  const url=getMediaUrl(e.data);
+  if(isBlobData(e.data))_bgBlobUrl=url;
   if(e.type==='video'){
-    const v2=document.createElement('video');v2.id='cv';v2.src=url;
-    v2.autoplay=true;v2.loop=true;v2.muted=true;v2.playsInline=true;
-    if(state.videoVolume>0){v2.muted=false;v2.volume=state.videoVolume/100;v2.play().catch(()=>{v2.muted=true})}else{v2.play().catch(()=>{})}
-    v2.disablePictureInPicture=true;v2.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');
-    v2.style.cssText='position:fixed;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;';
-    bgL.after(v2)
+    _cv=document.createElement('video');_cv.id='cv';_cv.src=url;
+    _cv.autoplay=true;_cv.loop=true;_cv.muted=true;_cv.playsInline=true;
+    if(state.videoVolume>0){_cv.muted=false;_cv.volume=state.videoVolume/100;_cv.play().catch(()=>{_cv.muted=true})}else{_cv.play().catch(()=>{})}
+    _cv.disablePictureInPicture=true;_cv.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');
+    _cv.style.cssText='position:fixed;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;';
+    bgL.after(_cv)
   }else{bgL.style.display='';bgL.style.backgroundImage='url('+url+')';bgL.classList.add('uploaded')}
 }
 async function cImg(f,mP){
@@ -191,7 +193,10 @@ async function cImg(f,mP){
     return new Promise(r=>c.toBlob(r,'image/jpeg',0.85))
   }catch{return null}
 }
-function rBgF(){if(_bgBlobUrl){URL.revokeObjectURL(_bgBlobUrl);_bgBlobUrl=null}const v=document.getElementById('cv');if(v)v.remove();bgL.style.display='';bgL.style.backgroundImage='';bgL.classList.remove('uploaded');bgUp.value='';sAB(null);uBgA(null)}
+function getMediaUrl(d){return typeof d==='string'?d:URL.createObjectURL(d)}
+function isBlobData(d){return typeof d!=='string'}
+
+function rBgF(){if(_bgBlobUrl){URL.revokeObjectURL(_bgBlobUrl);_bgBlobUrl=null}if(_cv){_cv.remove();_cv=null}bgL.style.display='';bgL.style.backgroundImage='';bgL.classList.remove('uploaded');bgUp.value='';sAB(null);uBgA(null)}
 
 /* ═══════════════════════════ Background Upload ═══════════════════════════ */
 bgUp.addEventListener('change',async e=>{
@@ -221,7 +226,7 @@ function gTP(){try{return JSON.parse(localStorage.getItem('ntp_templates')||'[]'
 function sTP(t){localStorage.setItem('ntp_templates',JSON.stringify(t))}
 function sSt(){return{searchBar:{...state.searchBar},clock:{...state.clock},engine:state.engine,backgroundId:gAB(),videoVolume:state.videoVolume}}
 let _as;function autoSave(){clearTimeout(_as);_as=setTimeout(()=>{try{localStorage.setItem('ntp_state',JSON.stringify(sSt()))}catch(e){}},500)}
-function aTP(tpl){Object.assign(state.searchBar,tpl.searchBar);Object.assign(state.clock,tpl.clock);state.engine=tpl.engine;if(tpl.videoVolume!==undefined)state.videoVolume=tpl.videoVolume;applyAll();es.value=tpl.engine;if(tpl.backgroundId)aBg(tpl.backgroundId);else rBgF();toast('已切换: '+tpl.name)}
+function aTP(tpl){Object.assign(state.searchBar,tpl.searchBar);Object.assign(state.clock,tpl.clock);state.engine=tpl.engine;if(tpl.videoVolume!==undefined)state.videoVolume=tpl.videoVolume;applyAll();if(tpl.backgroundId)aBg(tpl.backgroundId);else rBgF();toast('已切换: '+tpl.name)}
 function bTP(){
   const tpls=gTP();if(!tpls.length){tplLst.innerHTML='<div class="tpl-empty">暂无模板</div>';return}
   tplLst.innerHTML=tpls.map((t,i)=>'<div class="tpl-item" data-idx="'+i+'"><span class="tpl-name">'+eH(t.name)+'</span><button class="tpl-del" data-idx="'+i+'">×</button></div>').join('');
@@ -240,7 +245,7 @@ applyAll();bTP();setTimeout(()=>toast('⚪ 底部圆钮拖拽 · ⚙ 齿轮设�
 
 /* ═══════════════════════════ Window Events ═══════════════════════════ */
 let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(applyAll,150)});
-document.addEventListener('visibilitychange',()=>{const v=document.getElementById('cv');if(!v)return;if(document.hidden){v.muted=true}else if(state.videoVolume>0){v.muted=false;v.volume=state.videoVolume/100;v.play().catch(()=>{})}});
+document.addEventListener('visibilitychange',()=>{if(!_cv)return;if(document.hidden){_cv.muted=true}else if(state.videoVolume>0){_cv.muted=false;_cv.volume=state.videoVolume/100;_cv.play().catch(()=>{})}});
 function activateAudio(v){if(state.videoVolume>0){v.muted=false;v.volume=state.videoVolume/100;v.play().catch(()=>{})}else{v.muted=true}}
-document.addEventListener('pointerdown',()=>{const v=document.getElementById('cv');if(v)activateAudio(v)},{once:true});
+document.addEventListener('pointerdown',()=>{if(_cv)activateAudio(_cv)},{once:true});
 })();

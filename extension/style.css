@@ -5,9 +5,11 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,BlinkMac
 :root{--sb-width:520px;--sb-height:48px;--sb-pad:24px;--sb-radius:50px;--sb-bg:rgba(255,255,255,.10);--sb-bg-hover:rgba(255,255,255,.14);--sb-font-size:16px;--sb-input-opacity:.25;--clk-color:#fff;--clk-opacity:1}
 
 /* ── Background ── */
-#bg-layer{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e,#302b63,#0f0c29);background-size:400% 400%;animation:gradientFlow 12s ease infinite;transition:background-image .5s ease}
-@keyframes gradientFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-#bg-layer.uploaded{animation:none;background-size:cover;background-position:center;background-repeat:no-repeat}
+#bg-layer{position:fixed;inset:0;z-index:0;overflow:hidden;transition:background-image .5s ease}
+#bg-layer::before{content:'';position:absolute;width:300%;height:300%;top:-100%;left:-100%;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e,#302b63,#0f0c29);animation:gradientFlow 12s ease infinite;will-change:transform}
+#bg-layer.uploaded::before{display:none}
+#bg-layer.uploaded{background-size:cover;background-position:center;background-repeat:no-repeat}
+@keyframes gradientFlow{0%{transform:translate(0,0)}50%{transform:translate(-33.33%,-33.33%)}100%{transform:translate(0,0)}}
 
 /* ── Search Bar ── */
 #search-bar{position:fixed;z-index:5;background:var(--sb-bg);border:1px solid rgba(255,255,255,.12);border-radius:var(--sb-radius);width:var(--sb-width);height:var(--sb-height);padding:0 var(--sb-pad);box-shadow:0 4px 30px rgba(0,0,0,.2);transition:box-shadow .35s ease,background .35s ease;display:block}
@@ -42,8 +44,8 @@ select option{background:#1a1a2e;color:#eee}
 .collapse-header:hover{color:rgba(255,255,255,.65)}
 .collapse-header .arrow{display:inline-block;transition:transform .25s ease;font-size:10px}
 .collapse-header .arrow.open{transform:rotate(90deg)}
-.collapse-body{overflow:hidden;max-height:800px;transition:max-height .35s ease,opacity .25s ease;opacity:1}
-.collapse-body.closed{max-height:0;opacity:0;padding:0}
+.collapse-body{overflow:hidden;max-height:800px;transition:max-height .3s ease,opacity .2s ease;opacity:1}
+.collapse-body.closed{max-height:0!important;opacity:0;padding:0}
 .setting-row{display:flex;flex-direction:column;gap:3px;padding:6px 0 6px 4px}
 .setting-row:last-child{padding-bottom:8px}
 .setting-row .row-header{display:flex;justify-content:space-between;align-items:center}

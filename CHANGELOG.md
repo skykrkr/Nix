@@ -1,5 +1,37 @@
 # Changelog
 
+## v4.4 — 2026-06-16
+
+复合块布局 + 背景 GPU 合成 + 代码清理。
+
+### 🎯 默认位置：复合块居中
+
+- 将时钟和搜索栏视为一个整体块，垂直居中于窗口
+- `calcBlockLayout()` 共享计算，`computeClockPosY()`/`computeSearchBarPosY()` 各自独立
+- 还原时间 / 搜索栏互不干扰，彻底解耦
+- 去除了错误的 `btnH=30`（drag button absolute 定位不占布局空间）
+- 无持久化，首次加载根据当前 `innerHeight` 实时计算
+
+### ⚡ 性能
+
+- **默认背景 GPU 合成：** `background-position` 动画 → `::before` + `transform: translate()`，CPU 17%→≈0%
+- **折叠面板过渡优化：** 硬编码 `max-height: 800px` → `scrollHeight` 精确测量 + `transitionend` 事件
+- **`_cv` 视频元素缓存：** 6 次 `getElementById('cv')` → 缓存引用
+
+### 🧹 代码清理
+
+- 移除：`clamp()`、`calcRelativeClockPos()`、`injCSS()`、`syncSliders()`、`HIDDEN_DEFAULTS`
+- 提取：`calcBlockLayout()`、`getMediaUrl()`、`isBlobData()`
+- Demo 渲染统一为 CSS 变量（`applyCSS()`），与扩展完全一致
+- `aTP()` 删除冗余 `syncSliders()` + `es.value=tpl.engine`
+- Demo 补全：`videoVolume` 持久化、`safeBgGet()`/`safeBgDel()`、音量面板
+
+### 🐛 Bug 修复
+
+- **字重默认值不同步：** HTML 滑块 `300` → `600`（与 `DEF.clock.fontWeight` 一致）
+
+---
+
 ## v4.3 — 2026-06-15
 
 代码重构 + autoplay 策略修复。
