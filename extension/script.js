@@ -51,8 +51,9 @@ function applyCSS(){
   R.setProperty('--sb-radius',s.radius+'px');
   R.setProperty('--sb-bg','rgba(255,255,255,'+(0.10*(s.opacityDef/100))+')');
   R.setProperty('--sb-bg-hover','rgba(255,255,255,'+(0.14*(s.opacityHover/100))+')');
-  R.setProperty('--sb-font-size',Math.round(s.height*.34)+'px');
-  R.setProperty('--sb-input-opacity',String(s.opacityDef/100));
+  R.setProperty('--sb-font-size',Math.round(s.height*.36)+'px');
+  // 文字不透明度与「底色透明度」解耦：底色可以很淡，字必须看得清
+  R.setProperty('--sb-input-opacity','0.92');
   R.setProperty('--clk-color',c.color==='dark'?'#000':'#fff');
   R.setProperty('--clk-opacity',String(c.opacity/100));
 }
