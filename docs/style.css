@@ -2,7 +2,7 @@
 body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;user-select:none;background:#0a0a0f}
 
 /* ── CSS Custom Properties (set dynamically by JS) ── */
-:root{--sb-width:520px;--sb-height:48px;--sb-pad:24px;--sb-radius:50px;--sb-bg:rgba(255,255,255,.10);--sb-bg-hover:rgba(255,255,255,.14);--sb-font-size:16px;--sb-input-opacity:.25;--clk-color:#fff;--clk-opacity:1}
+:root{--sb-width:520px;--sb-height:48px;--sb-pad:24px;--sb-radius:50px;--sb-bg:rgba(255,255,255,.10);--sb-bg-hover:rgba(255,255,255,.14);--sb-font-size:16px;--sb-input-opacity:.92;--clk-color:#fff;--clk-opacity:1}
 
 /* ── Background ── */
 #bg-layer{position:fixed;inset:0;z-index:0;overflow:hidden;transition:background-image .5s ease}
@@ -15,7 +15,7 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,BlinkMac
 #search-bar{position:fixed;z-index:5;background:var(--sb-bg);border:1px solid rgba(255,255,255,.12);border-radius:var(--sb-radius);width:var(--sb-width);height:var(--sb-height);padding:0 var(--sb-pad);box-shadow:0 4px 30px rgba(0,0,0,.2);transition:box-shadow .35s ease,background .35s ease;display:block}
 #search-bar:hover{box-shadow:0 8px 40px rgba(0,0,0,.4);background:var(--sb-bg-hover)}
 #search-bar.hidden{display:none}
-#search-input{display:block;width:100%;background:transparent;border:none;outline:none;color:rgba(0,0,0,.85);padding:0;font-family:inherit;caret-color:rgba(0,0,0,.5);font-size:var(--sb-font-size);line-height:var(--sb-height);opacity:var(--sb-input-opacity);transition:opacity .35s ease}
+#search-input{display:block;width:100%;background:transparent;border:none;outline:none;color:rgba(255,255,255,.96);padding:0;font-family:inherit;font-weight:500;letter-spacing:.01em;text-shadow:0 0 2px rgba(0,0,0,.9),0 1px 2px rgba(0,0,0,.75),0 0 7px rgba(0,0,0,.5);-webkit-text-stroke:.6px rgba(0,0,0,.45);caret-color:rgba(255,255,255,.85);font-size:var(--sb-font-size);line-height:var(--sb-height);opacity:var(--sb-input-opacity);transition:opacity .35s ease}
 #search-bar:hover #search-input,#search-input:focus{opacity:1}
 
 /* ── Drag Button ── */
