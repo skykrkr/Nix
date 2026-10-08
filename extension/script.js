@@ -22,6 +22,9 @@ function computeSearchBarPosY(){const b=calcBlockLayout();return Math.round((b.t
 const $=id=>document.getElementById(id);
 function calcPos(w,h,pX,pY){return{l:(innerWidth*pX/100)-w/2,t:(innerHeight*pY/100)-h/2}}
 function posToPct(w,h,l,t){return{pX:((l+w/2)/innerWidth)*100,pY:((t+h/2)/innerHeight)*100}}
+// 越界钳制：把中心点百分比夹到「元素整体不出视口」的范围内
+function clampPct(w,h,pX,pY){const mx=Math.min(w/2/innerWidth*100,50),my=Math.min(h/2/innerHeight*100,50);return{pX:Math.min(Math.max(pX,mx),100-mx),pY:Math.min(Math.max(pY,my),100-my)}}
+function clampState(){const s=state.searchBar,c=state.clock;const a=clampPct(s.width,s.height,s.posX,s.posY);s.posX=a.pX;s.posY=a.pY;const r=clk.getBoundingClientRect();if(r.width>0){const b=clampPct(r.width,r.height,c.posX,c.posY);c.posX=b.pX;c.posY=b.pY}else{c.posX=Math.min(100,Math.max(0,c.posX));c.posY=Math.min(100,Math.max(0,c.posY))}}
 function getSearchUrl(engine,q){return(ENGINES[engine]||ENGINES.bing)(q.trim())}
 
 /* ═══════════════════════════ DOM Refs ═══════════════════════════ */
@@ -55,6 +58,7 @@ function applyCSS(){
 }
 
 function applyPositions(){
+  clampState();
   const s=state.searchBar,c=state.clock;
   sb.classList.toggle('hidden',!s.show);
   if(s.show){const p=calcPos(s.width,s.height,s.posX,s.posY);sb.style.left=p.l+'px';sb.style.top=p.t+'px'}
@@ -129,7 +133,7 @@ document.querySelectorAll('.drag-btn').forEach(btn=>{
   const p=btn.parentElement;let drag=null;
   btn.addEventListener('mousedown',e=>{const r=p.getBoundingClientRect();drag={ox:e.clientX-r.left,oy:e.clientY-r.top,sx:r.left,sy:r.top};e.preventDefault()});
   document.addEventListener('mousemove',e=>{if(!drag)return;p.style.transform='translate('+(e.clientX-drag.ox-drag.sx)+'px,'+(e.clientY-drag.oy-drag.sy)+'px)'});
-  document.addEventListener('mouseup',()=>{if(!drag)return;const r=p.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;p.style.transform='';if(p===clk){state.clock.posX=(cx/innerWidth)*100;state.clock.posY=(cy/innerHeight)*100}else{const s=posToPct(state.searchBar.width,state.searchBar.height,r.left,r.top);state.searchBar.posX=s.pX;state.searchBar.posY=s.pY}drag=null;syncSlidersUI();applyAll();try{localStorage.setItem('ntp_state',JSON.stringify(sSt()))}catch(e){}});
+  document.addEventListener('mouseup',()=>{if(!drag)return;const r=p.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;p.style.transform='';if(p===clk){const c=clampPct(r.width,r.height,(cx/innerWidth)*100,(cy/innerHeight)*100);state.clock.posX=c.pX;state.clock.posY=c.pY}else{const s=posToPct(state.searchBar.width,state.searchBar.height,r.left,r.top);const c=clampPct(state.searchBar.width,state.searchBar.height,s.pX,s.pY);state.searchBar.posX=c.pX;state.searchBar.posY=c.pY}drag=null;syncSlidersUI();applyAll();try{localStorage.setItem('ntp_state',JSON.stringify(sSt()))}catch(e){}});
 });
 
 /* ═══════════════════════════ Background Storage ═══════════════════════════ */
