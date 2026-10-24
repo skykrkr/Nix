@@ -64,7 +64,12 @@ function snapCenter(vx,el){
   setGuide(false);return vx;
 }
 function designPx(pX,pY,w,h,k){const t=viewT(),kk=t.s*(k||1);const cx=pX/100*state.design.w,cy=pY/100*state.design.h;return{x:t.ox+cx*t.s-w*kk/2,y:t.oy+cy*t.s-h*kk/2,k:kk}}
-function clampPct(w,h,pX,pY,k){const t=viewT(),kk=t.s*(k||1),hw=w*kk/2,hh=h*kk/2;let vx=t.ox+(pX/100*state.design.w)*t.s,vy=t.oy+(pY/100*state.design.h)*t.s;vx=Math.min(Math.max(vx,hw),innerWidth-hw);vy=Math.min(Math.max(vy,hh),innerHeight-hh);return{pX:((vx-t.ox)/t.s)/state.design.w*100,pY:((vy-t.oy)/t.s)/state.design.h*100}}
+function clampPct(w,h,pX,pY,k){const t=viewT(),kk=t.s*(k||1),hw=w*kk/2,hh=h*kk/2;let vx=t.ox+(pX/100*state.design.w)*t.s,vy=t.oy+(pY/100*state.design.h)*t.s;
+  // 元素小于视口：中心夹在 [hw, W-hw]，两边不出界
+  // 元素大于视口：区间反转，要求元素始终覆盖视口；拖到端点时贴边，不露背景
+  const loX=Math.min(hw,innerWidth-hw),hiX=Math.max(hw,innerWidth-hw),loY=Math.min(hh,innerHeight-hh),hiY=Math.max(hh,innerHeight-hh);
+  vx=Math.min(Math.max(vx,loX),hiX);vy=Math.min(Math.max(vy,loY),hiY);
+  return{pX:((vx-t.ox)/t.s)/state.design.w*100,pY:((vy-t.oy)/t.s)/state.design.h*100}}
 
 function clampState(){const s=state.searchBar,c=state.clock;const a=clampPct(s.width,s.height,s.posX,s.posY,s.scale);s.posX=a.pX;s.posY=a.pY;const cw=clk.offsetWidth,ch=clk.offsetHeight;if(cw>0&&ch>0){const b=clampPct(cw,ch,c.posX,c.posY,c.scale);c.posX=b.pX;c.posY=b.pY}else{c.posX=Math.min(100,Math.max(0,c.posX));c.posY=Math.min(100,Math.max(0,c.posY))}}
 function getSearchUrl(engine,q){return(ENGINES[engine]||ENGINES.bing)(q.trim())}

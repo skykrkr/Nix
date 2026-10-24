@@ -111,10 +111,11 @@ select option{background:#1a1a2e;color:#eee}
 #snap-guide.on{opacity:1}
 
 .reset-one{margin-left:6px;width:18px;height:18px;line-height:16px;text-align:center;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#8fa4c0;font-size:11px;cursor:pointer;padding:0}
-.reset-one:hover{opacity:1;border-color:rgba(126,178,255,.75);color:#cfe0ff}
+.reset-one:hover{opacity:1;color:#cfe0ff;transform:rotate(-40deg)}
+.reset-one svg{width:11px;height:11px}
 
 .lab-wrap{display:inline-flex;align-items:center;gap:0}
-.reset-one{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;line-height:1;vertical-align:middle;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:transparent;color:#9fb2ca;font-size:9px;cursor:pointer;padding:0;margin-left:5px;opacity:.65;transition:opacity .15s,border-color .15s}
+.reset-one{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;line-height:1;vertical-align:middle;border:0;background:transparent;color:#9fb2ca;font-size:9px;cursor:pointer;padding:0;margin-left:5px;opacity:.7;transition:opacity .15s,transform .15s}
 .reset-one:hover{background:rgba(126,178,255,.18);border-color:rgba(126,178,255,.5);color:#cfe0ff}
 .hint-i{position:relative;display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border:1px solid rgba(255,255,255,.35);border-radius:50%;font-size:9px;line-height:1;color:#9fb2ca;cursor:help;margin-left:5px}
 .hint-i:hover::after{content:attr(data-tip);position:absolute;left:50%;bottom:150%;transform:translateX(-50%);width:170px;white-space:normal;text-align:center;background:rgba(16,20,30,.97);border:1px solid rgba(255,255,255,.14);color:#cfdcef;font-size:11px;line-height:1.5;padding:6px 8px;border-radius:7px;z-index:99}
