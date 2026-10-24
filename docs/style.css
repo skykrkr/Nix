@@ -19,7 +19,7 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,BlinkMac
 #search-bar:hover #search-input,#search-input:focus{opacity:1}
 
 /* ── Drag Button ── */
-.drag-btn{position:absolute;left:50%;bottom:-30px;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;border:none;cursor:grab;opacity:1!important;z-index:1;transition:background .25s ease;background:rgba(255,255,255,.2)}
+.drag-btn{touch-action:none;position:absolute;left:50%;bottom:-30px;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;border:none;cursor:grab;opacity:1!important;z-index:1;transition:background .25s ease;background:rgba(255,255,255,.2)}
 .drag-btn:hover{background:rgba(255,255,255,.6)!important}.drag-btn:active{cursor:grabbing}
 
 /* ── Clock ── */
@@ -97,3 +97,30 @@ select option{background:#1a1a2e;color:#eee}
 #settings-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:2px}
 #settings-panel::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
 @media(max-width:600px){#settings-panel{width:100vw}}
+
+.dragging{will-change:transform}
+
+/* 拖拽把手自适应：贴底时翻到上方，空间不足时收进组件内 */
+.handle-top .drag-btn{bottom:auto;top:-30px}
+.handle-in .drag-btn{bottom:6px}
+.dragging .drag-btn{opacity:1!important}
+
+#search-bar,#clock{transform-origin:0 0}
+
+#snap-guide{position:fixed;top:0;left:50%;width:1px;height:100%;background:rgba(126,178,255,.55);opacity:0;pointer-events:none;transition:opacity .12s;z-index:60}
+#snap-guide.on{opacity:1}
+
+.reset-one{margin-left:6px;width:18px;height:18px;line-height:16px;text-align:center;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#8fa4c0;font-size:11px;cursor:pointer;padding:0}
+.reset-one:hover{opacity:1;border-color:rgba(126,178,255,.75);color:#cfe0ff}
+
+.lab-wrap{display:inline-flex;align-items:center;gap:0}
+.reset-one{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;line-height:1;vertical-align:middle;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:transparent;color:#9fb2ca;font-size:9px;cursor:pointer;padding:0;margin-left:5px;opacity:.65;transition:opacity .15s,border-color .15s}
+.reset-one:hover{background:rgba(126,178,255,.18);border-color:rgba(126,178,255,.5);color:#cfe0ff}
+.hint-i{position:relative;display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border:1px solid rgba(255,255,255,.35);border-radius:50%;font-size:9px;line-height:1;color:#9fb2ca;cursor:help;margin-left:5px}
+.hint-i:hover::after{content:attr(data-tip);position:absolute;left:50%;bottom:150%;transform:translateX(-50%);width:170px;white-space:normal;text-align:center;background:rgba(16,20,30,.97);border:1px solid rgba(255,255,255,.14);color:#cfdcef;font-size:11px;line-height:1.5;padding:6px 8px;border-radius:7px;z-index:99}
+
+#reset-search svg,#reset-clock svg,#reset-bg svg{width:12px;height:12px;vertical-align:-2px;margin-right:5px}
+
+.btn svg{width:12px;height:12px;vertical-align:-2px;margin-right:5px}
+
+#gear-btn svg{width:18px;height:18px;display:block}
