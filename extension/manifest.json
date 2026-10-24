@@ -9,9 +9,7 @@
     "newtab": "index.html"
   },
   "permissions": [],
-  "author": {
-    "email": "1417930068@qq.com"
-  },
+  "author": "skykrkr",
   "homepage_url": "https://github.com/skykrkr/Nix",
   "icons": {
     "16": "icons/icon16.png",

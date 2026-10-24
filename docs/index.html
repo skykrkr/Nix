@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nix</title>
+<title>Nix 自测页</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
   <button class="drag-btn"></button>
 </div>
 
-<div id="gear-btn">⚙</div>
+<div id="gear-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></div>
 <div id="panel-overlay"></div>
 
 <div id="settings-panel">
@@ -36,12 +36,13 @@
       <div class="setting-row"><div class="row-header"><label>宽度</label><span class="val" id="swv">520px</span></div><input type="range" id="sw" min="200" max="900" value="520"></div>
       <div class="setting-row"><div class="row-header"><label>高度</label><span class="val" id="shv">48px</span></div><input type="range" id="sh" min="32" max="80" value="48"></div>
       <div class="setting-row"><div class="row-header"><label>圆角</label><span class="val" id="srv">50px</span></div><input type="range" id="sr" min="4" max="60" value="50"></div>
+      <div class="setting-row"><div class="row-header"><label>整体大小</label><span class="val" id="sscv">100%</span></div><input type="range" id="ssc" min="60" max="180" value="100"></div>
       <div class="setting-row"><div class="row-header"><label>水平位置</label><span class="val" id="sxv">50%</span></div><input type="range" id="sx" min="0" max="100" value="50"></div>
       <div class="setting-row"><div class="row-header"><label>垂直位置</label><span class="val" id="syv">50%</span></div><input type="range" id="sy" min="0" max="100" value="50"></div>
       <div class="setting-row"><div class="row-header"><label>默认透明度</label><span class="val" id="sodv">25%</span></div><input type="range" id="sod" min="0" max="100" value="25"></div>
       <div class="setting-row"><div class="row-header"><label>悬停透明度</label><span class="val" id="sohv">100%</span></div><input type="range" id="soh" min="0" max="100" value="100"></div>
       <div class="setting-row"><div class="row-header"><label>拖拽钮常显透明度</label><span class="val" id="sdv">10%</span></div><input type="range" id="sd" min="0" max="100" value="10"></div>
-      <div class="btn-group" style="margin-top:2px"><button class="btn" id="reset-search">↺ 还原默认</button></div>
+      <div class="btn-group" style="margin-top:2px"><button class="btn" id="reset-search">↺ 还原全部默认</button></div>
     </div>
   </div>
 
@@ -53,10 +54,21 @@
       <div class="setting-row"><div class="row-header"><label>字号</label><span class="val" id="cszv">100px</span></div><input type="range" id="csz" min="48" max="160" value="100"></div>
       <div class="setting-row"><div class="row-header"><label>透明度</label><span class="val" id="cov">100%</span></div><input type="range" id="co" min="0" max="100" value="100"></div>
       <div class="setting-row"><div class="row-header"><label>字重</label><span class="val" id="cfwv">600</span></div><input type="range" id="cfw" min="100" max="900" step="100" value="600"></div>
+      <div class="setting-row"><div class="row-header"><label>整体大小</label><span class="val" id="cscv">100%</span></div><input type="range" id="csc" min="60" max="180" value="100"></div>
       <div class="setting-row"><div class="row-header"><label>水平位置</label><span class="val" id="cxv">50%</span></div><input type="range" id="cx" min="0" max="100" value="50"></div>
       <div class="setting-row"><div class="row-header"><label>垂直位置</label><span class="val" id="cyv">40%</span></div><input type="range" id="cy" min="0" max="100" value="40"></div>
       <div class="setting-row"><div class="row-header"><label>拖拽钮常显透明度</label><span class="val" id="cdv">10%</span></div><input type="range" id="cd" min="0" max="100" value="10"></div>
-      <div class="btn-group" style="margin-top:2px"><button class="btn" id="reset-clock">↺ 还原默认</button></div>
+      <div class="btn-group" style="margin-top:2px"><button class="btn" id="reset-clock">↺ 还原全部默认</button></div>
+    </div>
+  </div>
+
+
+  <div class="collapse-section">
+    <div class="collapse-header" data-target="misc"><span class="arrow">▶</span><span>其它</span></div>
+    <div class="collapse-body closed" id="misc">
+      <div class="setting-row"><div class="row-header"><label>全局缩放系数</label><span class="val" id="gscv">100%</span></div><input type="range" id="gsc" min="60" max="160" value="100"></div>
+      <div class="toggle-row"><label>整体中轴线吸附<span class="hint-i" data-tip="拖动时靠近屏幕中线自动对齐">!</span></label><label class="toggle-switch"><input type="checkbox" id="snapx"><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><label>组件中轴线吸附<span class="hint-i" data-tip="靠近另一个组件的中线时自动对齐">!</span></label><label class="toggle-switch"><input type="checkbox" id="snapp"><span class="toggle-slider"></span></label></div>
     </div>
   </div>
 
@@ -66,13 +78,13 @@
     <div class="collapse-header" data-target="bgc"><span class="arrow open">▶</span><span>背景</span></div>
     <div class="collapse-body" id="bgc">
       <div class="btn-group" style="padding:4px 0">
-        <label class="btn">📁 上传背景<input type="file" accept="image/*,video/*,.gif"></label>
+        <label class="btn"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> 上传背景<input type="file" accept="image/*,video/*,.gif"></label>
         <button class="btn" id="reset-bg">↺ 还原默认背景</button>
       </div>
       <div class="sep" style="margin:5px 0"></div>
       <div class="setting-row">
-        <div class="row-header"><label>背景音量</label><span class="val" id="vv">0%</span></div>
-        <input type="range" id="vol" min="0" max="100" value="0">
+        <div class="row-header"><label>背景音量</label><span class="val" id="vv">100%</span></div>
+        <input type="range" id="vol" min="0" max="100" value="100">
       </div>
       <div class="sec-label">背景库</div>
       <div class="bg-list" id="bg-list"><div class="bg-empty">暂无已保存背景</div></div>
@@ -84,19 +96,24 @@
   <div class="collapse-section">
     <div class="collapse-header" data-target="tplc"><span class="arrow open">▶</span><span>模板</span></div>
     <div class="collapse-body" id="tplc">
-      <div class="tpl-save-row"><input id="tpl-name" placeholder="模板名称…"><button class="btn" id="tpl-save">💾 保存</button></div>
+      <div class="tpl-save-row"><input id="tpl-name" placeholder="模板名称…"><button class="btn" id="tpl-save"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3"/><path d="M8 21v-7h8v7"/></svg> 保存</button></div>
       <div class="sec-label" style="margin-top:6px">已保存模板（点击切换）</div>
       <div class="tpl-list" id="tpl-list"><div class="tpl-empty">暂无模板</div></div>
     </div>
   </div>
+
+  <div class="sep"></div>
+
 </div>
+
+<div id="snap-guide"></div>
 
 <div id="search-bar">
   <input id="search-input" type="text" spellcheck="false">
   <button class="drag-btn"></button>
 </div>
 
-<div id="hint">⚪ 底部圆钮拖拽 · ⚙ 齿轮设置</div>
+<div id="hint">拖拽底部圆钮 · 右上角齿轮打开设置</div>
 
 <script>
 try{localStorage.getItem('__probe');}catch(e){

@@ -1,6 +1,6 @@
 # Privacy Policy — Nix
 
-**Last updated:** 2026-06-15
+**Last updated:** 2026-10-24
 
 Nix does **not** collect, store, transmit, or share any personal data.
 
@@ -10,11 +10,10 @@ All data created by Nix is stored **locally** on your device:
 
 | Data | Storage | Purpose |
 |------|---------|---------|
-| Component positions, sizes, colors | `localStorage` (browser) | Remember your layout preferences |
+| Component positions, sizes, colors, design canvas, zoom levels | `localStorage` (browser) | Remember your layout preferences |
 | Background images/videos | IndexedDB (browser) | Store custom backgrounds you upload |
 | Background metadata | `localStorage` (browser) | Track uploaded background list |
 | Layout templates | `localStorage` (browser) | Save/load your workspace configurations |
-| Volume settings | `localStorage` (browser) | Remember your audio preferences |
 
 ## No Data Transmission
 
@@ -34,7 +33,7 @@ When you perform a search via Nix's search bar, the search query is sent directl
 ## Changes
 
 If this policy changes, the version will be updated at:
-https://github.com/skykrkr/Nix/blob/main/extension/PRIVACY.md
+https://github.com/skykrkr/Nix/blob/main/PRIVACY.md
 
 ## Contact
 
