@@ -1,5 +1,35 @@
 # Changelog
 
+## v4.6.1 — 2026-10-24
+
+文档与代码清洁度整理，无功能变更。
+
+### 🧹 代码
+
+- 删除死函数 calcPos / posToPct
+- resize 监听合并为单一 applyAll，去掉原先「防抖 + 立即」两套重复调用
+- IndexedDB 连接缓存，versionchange 时自动关闭并失效
+- 拖拽监听单例化：按钮只留 pointerdown，document 上仅一套 move/up/cancel
+- 英文注释统一为中文
+
+### 📄 文档
+
+- README 重写：体积口径改为「打包约 17 KB」，安装分 Release / 源码两种，补全功能与链接
+- 在线自测页由 extension 重新生成，补回 9 个 v4.6 元素
+- PRIVACY 修正链接与存储说明；LICENSE 补署名
+- 删除重复的 extension/README；两个历史 demo 快照移出仓库
+- 历史报告重命名为 v4.4 并标注
+- manifest author 由对象改为字符串
+
+### 🛠 工程
+
+- 新增 tools/sync.py（同步 docs/ 与 demo/，支持 --check）
+- Pages 部署前校验生成物一致性，漂移即失败
+
+### 🧪 测试
+
+- 3 轮 207 项全过；拖拽 0.05 ms/次，resize 16.5 ms/帧，越界 0 次
+
 ## v4.6 — 2026-10-24
 
 布局与拖拽重构 + 设置面板扩充。
