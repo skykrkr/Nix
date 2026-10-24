@@ -31,8 +31,6 @@ function computeSearchBarPosY(){const b=calcBlockLayout();return Math.round((b.t
 
 /* ═══════════════════════════ Helpers ═══════════════════════════ */
 const $=id=>document.getElementById(id);
-function calcPos(w,h,pX,pY){return{l:(innerWidth*pX/100)-w/2,t:(innerHeight*pY/100)-h/2}}
-function posToPct(w,h,l,t){return{pX:((l+w/2)/innerWidth)*100,pY:((t+h/2)/innerHeight)*100}}
 // 位置统一由 transform 表达：拖拽与落位同一条渲染路径，避免合成层/布局层取整不一致导致 1px 跳变
 function placeHandle(el,t,h,k){const kk=k||1;const below=innerHeight-(t+h*kk);el.classList.remove('handle-top','handle-in');if(below<30*kk){if(t>=30*kk)el.classList.add('handle-top');else el.classList.add('handle-in')}}
 function setPos(el,l,t,k){el.style.left='0px';el.style.top='0px';el.style.transform='translate3d('+l+'px,'+t+'px,0) scale('+(k==null?1:k)+')'}
@@ -183,53 +181,65 @@ document.querySelectorAll('.collapse-header').forEach(h=>{h.addEventListener('cl
 si.addEventListener('keydown',e=>{if(e.key==='Enter'){const q=si.value.trim();if(q)window.open(getSearchUrl(es.value,q),'_blank')}});
 
 /* ═══════════════════════════ Drag ═══════════════════════════ */
+let _drag=null;
+function dragSize(p){
+  if(p===clk)return{w:clk.offsetWidth,h:clk.offsetHeight,k:state.clock.scale};
+  return{w:state.searchBar.width,h:state.searchBar.height,k:state.searchBar.scale};
+}
 document.querySelectorAll('.drag-btn').forEach(btn=>{
-  const p=btn.parentElement;let drag=null;
-  const sizeOf=()=>{
-    if(p===clk)return{w:clk.offsetWidth,h:clk.offsetHeight,k:state.clock.scale};
-    return{w:state.searchBar.width,h:state.searchBar.height,k:state.searchBar.scale};
-  };
+  const p=btn.parentElement;
   btn.addEventListener('pointerdown',e=>{
     if(e.button!==undefined&&e.button!==0)return;
     const r=p.getBoundingClientRect();
-    drag={ox:e.clientX-r.left,oy:e.clientY-r.top,pid:e.pointerId,lx:e.clientX,ly:e.clientY,
-          vx:r.left+r.width/2,vy:r.top+r.height/2,px:e.clientX,py:e.clientY};
+    _drag={p:p,btn:btn,pid:e.pointerId,lx:e.clientX,ly:e.clientY,
+           vx:r.left+r.width/2,vy:r.top+r.height/2,px:e.clientX,py:e.clientY};
     if(btn.setPointerCapture)try{btn.setPointerCapture(e.pointerId)}catch(err){}
     p.classList.add('dragging');e.preventDefault();
   });
-  document.addEventListener('pointermove',e=>{
-    if(!drag||e.pointerId!==drag.pid)return;
-    drag.lx=e.clientX;drag.ly=e.clientY;
-    const t=viewT(),d=state.design;
-    const vx=snapCenter(drag.vx+(e.clientX-drag.px),p),vy=drag.vy+(e.clientY-drag.py);
-    const pX=((vx-t.ox)/t.s)/d.w*100,pY=((vy-t.oy)/t.s)/d.h*100;
-    const z=sizeOf(),q=designPx(pX,pY,z.w,z.h,z.k);
-    setPos(p,q.x,q.y,q.k);
-  });
-  function endDrag(e){
-    if(!drag)return;
-    if(e&&e.pointerId!==drag.pid)return;
-    const t=viewT(),d=state.design;
-    const px=(e&&e.clientX!=null)?e.clientX:drag.lx;
-    const py=(e&&e.clientY!=null)?e.clientY:drag.ly;
-    const vx=snapCenter(drag.vx+(px-drag.px),p),vy=drag.vy+(py-drag.py);
-    const pX=((vx-t.ox)/t.s)/d.w*100,pY=((vy-t.oy)/t.s)/d.h*100;
-    const z=sizeOf(),c=clampPct(z.w,z.h,pX,pY,z.k);
-    if(p===clk){state.clock.posX=c.pX;state.clock.posY=c.pY}
-    else{state.searchBar.posX=c.pX;state.searchBar.posY=c.pY}
-    setGuide(false);p.classList.remove('dragging');drag=null;syncSlidersUI();applyAll();
-    try{localStorage.setItem('ntp_state',JSON.stringify(sSt()))}catch(err){}
-  }
-  document.addEventListener('pointerup',endDrag);
-  document.addEventListener('pointercancel',endDrag);
 });
+document.addEventListener('pointermove',e=>{
+  if(!_drag||e.pointerId!==_drag.pid)return;
+  _drag.lx=e.clientX;_drag.ly=e.clientY;
+  const t=viewT(),d=state.design,p=_drag.p;
+  const vx=snapCenter(_drag.vx+(e.clientX-_drag.px),p),vy=_drag.vy+(e.clientY-_drag.py);
+  const pX=((vx-t.ox)/t.s)/d.w*100,pY=((vy-t.oy)/t.s)/d.h*100;
+  const z=dragSize(p),q=designPx(pX,pY,z.w,z.h,z.k);
+  setPos(p,q.x,q.y,q.k);
+});
+function endDrag(e){
+  if(!_drag)return;
+  if(e&&e.pointerId!==_drag.pid)return;
+  const t=viewT(),d=state.design,p=_drag.p;
+  const px=(e&&e.clientX!=null)?e.clientX:_drag.lx;
+  const py=(e&&e.clientY!=null)?e.clientY:_drag.ly;
+  const vx=snapCenter(_drag.vx+(px-_drag.px),p),vy=_drag.vy+(py-_drag.py);
+  const pX=((vx-t.ox)/t.s)/d.w*100,pY=((vy-t.oy)/t.s)/d.h*100;
+  const z=dragSize(p),c=clampPct(z.w,z.h,pX,pY,z.k);
+  if(p===clk){state.clock.posX=c.pX;state.clock.posY=c.pY}
+  else{state.searchBar.posX=c.pX;state.searchBar.posY=c.pY}
+  setGuide(false);p.classList.remove('dragging');_drag=null;syncSlidersUI();applyAll();
+  try{localStorage.setItem('ntp_state',JSON.stringify(sSt()))}catch(err){}
+}
+document.addEventListener('pointerup',endDrag);
+document.addEventListener('pointercancel',endDrag);
 
 /* ═══════════════════════════ Background Storage ═══════════════════════════ */
-function odb(){return new Promise((res,rej)=>{const r=indexedDB.open('ntp-bg-store',2);r.onupgradeneeded=e=>{const d=e.target.result;if(d.objectStoreNames.contains('backgrounds'))d.deleteObjectStore('backgrounds');if(!d.objectStoreNames.contains('bgs'))d.createObjectStore('bgs',{keyPath:'id'})};r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error)})}
+let _dbP=null;
+function odb(){
+  if(_dbP)return _dbP;
+  _dbP=new Promise((res,rej)=>{
+    const r=indexedDB.open('ntp-bg-store',2);
+    r.onupgradeneeded=e=>{const d=e.target.result;if(d.objectStoreNames.contains('backgrounds'))d.deleteObjectStore('backgrounds');if(!d.objectStoreNames.contains('bgs'))d.createObjectStore('bgs',{keyPath:'id'})};
+    r.onsuccess=()=>{const db=r.result;db.onversionchange=()=>{db.close();_dbP=null};res(db)};
+    r.onerror=()=>{_dbP=null;rej(r.error)};
+    r.onblocked=()=>{_dbP=null};
+  });
+  return _dbP;
+}
 async function bgP(id,n,t,b){const db=await odb(),tx=db.transaction('bgs','readwrite');tx.objectStore('bgs').put({id,name:n,type:t,data:b,at:Date.now()});await new Promise(r=>tx.oncomplete=r)}
 async function bgG(id){const db=await odb();return new Promise((res,rej)=>{const r=db.transaction('bgs','readonly').objectStore('bgs').get(id);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 async function bgD(id){const db=await odb(),tx=db.transaction('bgs','readwrite');tx.objectStore('bgs').delete(id);await new Promise(r=>tx.oncomplete=r)}
-// Safe wrappers for IndexedDB operations
+// IndexedDB 操作的兜底包装
 async function safeBgGet(id){try{return await bgG(id)}catch{return null}}
 async function safeBgDel(id){try{await bgD(id)}catch{}}
 
@@ -336,7 +346,7 @@ let tt;function toast(m){ht.textContent=m;ht.classList.add('show');clearTimeout(
 applyAll();bTP();setTimeout(()=>toast('⚪ 底部圆钮拖拽 · ⚙ 齿轮设置'),1500);
 
 /* ═══════════════════════════ Window Events ═══════════════════════════ */
-let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(applyAll,150)});
+addEventListener('resize',applyAll);
 document.addEventListener('visibilitychange',()=>{if(!_cv)return;if(document.hidden){_cv.muted=true}else if(state.videoVolume>0){_cv.muted=false;_cv.volume=state.videoVolume/100;_cv.play().catch(()=>{})}});
 function activateAudio(v){if(state.videoVolume>0){v.muted=false;v.volume=state.videoVolume/100;v.play().catch(()=>{})}else{v.muted=true}}
 document.addEventListener('pointerdown',()=>{if(_cv)activateAudio(_cv)},{once:true});
@@ -377,5 +387,4 @@ const REFRESH_SVG='<svg viewBox="0 0 24 24" width="9" height="9" fill="none" str
 })();
 (function(){['reset-search','reset-clock'].forEach(function(id){var b=document.getElementById(id);if(b)b.innerHTML=REFRESH_SVG+' 还原全部默认'});
 var rb=document.getElementById('reset-bg');if(rb)rb.innerHTML=REFRESH_SVG+' 还原默认背景';})();
-addEventListener('resize',()=>applyAll());
 })();
